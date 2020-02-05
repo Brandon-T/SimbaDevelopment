@@ -11,6 +11,7 @@ function GetExpression(constref Text: String; Start: Int32): String;
 function CleanExpression(constref Text: String): String;
 function SplitExpression(constref Text: String): TStringArray;
 
+
 implementation
 
 function GetExpression(constref Text: String; Start: Int32): String;

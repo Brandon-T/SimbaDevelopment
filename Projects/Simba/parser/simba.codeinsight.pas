@@ -585,6 +585,8 @@ begin
     end;
   end;
 
+
+
   if Result = nil then
     Exit;
 
@@ -627,6 +629,31 @@ begin
     end;
   end;
 end;
+      {
+
+function TCodeInsight.FindExpression(Expr: String): TDeclarationArray;
+var
+  i: Int32;
+begin
+  Strings := SplitExpression(Expr);
+   if Length(Strings) = 0 then
+     Exit;
+
+   SetLength(Expressions, Length(Strings));
+
+   for i := 0 to High(Strings) do
+   begin
+     if Strings[i].Contains('[') then
+     begin
+       Expressions[i].Dimensions := Strings[i].CountChar('[') + Strings[i].CountChar(',');
+       Expressions[i].Text := Copy(Strings[i], 1, Strings[i].IndexOf('['));
+     end else
+       Expressions[i].Text := Strings[i];
+   end;
+
+   Writeln(Expressions[i].
+end; }
+
 
 function TCodeInsight.ParseExpression(Expr: String; out Members: TDeclarationArray): TDeclaration;
 begin
@@ -650,8 +677,7 @@ var
       Callback(Parser);
 
     for Parser in Parser.Includes do
-      if List.Add(Parser.FileName) > -1 then
-        Callback(Parser);
+      Searching(Parser);
   end;
 
 var

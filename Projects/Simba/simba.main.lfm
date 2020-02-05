@@ -6,6 +6,7 @@ object SimbaForm: TSimbaForm
   Caption = 'Simba'
   ClientHeight = 338
   ClientWidth = 443
+  KeyPreview = True
   Menu = MainMenu
   OnClose = FormClose
   OnDestroy = FormDestroy

@@ -114,7 +114,7 @@ begin
   with Script.Client do
     Bitmap := MBitmaps[PInt32(Params^[0])^];
 
-  Method := TSimbaMethod.Create(SIMBA_METHOD_DEBUG_IMAGE_DISPLAY);
+  Method := TSimbaMethod.Create(SIMBA_METHOD_DEBUG_IMAGE_DRAW);
   Method.Params.Write(Bitmap.Width, SizeOf(Int32));
   Method.Params.Write(Bitmap.Height, SizeOf(Int32));
   Method.Params.Write(Bitmap.FData^, Bitmap.Width * Bitmap.Height * SizeOf(TRGB32));

@@ -11,6 +11,7 @@ uses
 type
   TSimbaScriptTab = class(TTabSheet)
   private
+    procedure SetFunctionListState(Value: TSimbaFunctionList_State);
     procedure SetScriptChanged(Value: Boolean);
   protected
     FEditor: TSimbaEditor;
@@ -51,9 +52,7 @@ type
     property Editor: TSimbaEditor read FEditor;
     property ScriptIsDefault: Boolean read FScriptIsDefault;
     property MouseLinkXY: TPoint read FMouseLinkXY write FMouseLinkXY;
-    property FunctionListState: TSimbaFunctionList_State read FFunctionListState write FFunctionListState;
-
-    procedure ShowDeclaration(Declaration: TDeclaration);
+    property FunctionListState: TSimbaFunctionList_State read FFunctionListState write SetFunctionListState;
 
     procedure HandleCodeJump(Data: PtrInt);
 
@@ -96,8 +95,9 @@ begin
   Parser := Self.ParseScript();
 
   if Expression.Contains('.') then
-    Parser.ParseExpression(Expression, Declarations)
-  else
+  begin
+    Parser.ParseExpression(Expression, Declarations);
+  end else
     Declarations := Parser.getDeclarations(Expression);
 
   if Length(Declarations) = 1 then
@@ -255,6 +255,15 @@ begin
   Invalidate();
 end;
 
+
+
+procedure TSimbaScriptTab.SetFunctionListState(Value: TSimbaFunctionList_State);
+begin
+  FFunctionListState.Free();
+
+  FFunctionListState := Value;
+end;
+
 procedure TSimbaScriptTab.SetScriptChanged(Value: Boolean);
 begin
   FScriptChanged := Value;
@@ -326,13 +335,6 @@ begin
     HandleParameterHints();
   if (Command = ecChar) and (AChar = '.') and SimbaSettings.Editor.AutomaticallyOpenAutoCompletion.Value then
     HandleAutoComplete();
-end;
-
-procedure TSimbaScriptTab.ShowDeclaration(Declaration: TDeclaration);
-begin
-  FEditor.SelStart := Declaration.StartPos + 1;
-  FEditor.SelEnd := Declaration.EndPos + 1;
-  FEditor.TopLine := (Declaration.Line + 1) - (FEditor.LinesInWindow div 2);
 end;
 
 function TSimbaScriptTab.Save(AFileName: String): Boolean;
@@ -434,6 +436,8 @@ begin
   FEditor.BorderStyle := bsNone;
 
   FScriptIsDefault := True;
+
+  FunctionListState := nil;
 end;
 
 constructor TSimbaScriptTab.Create(APageControl: TPageControl);
@@ -451,8 +455,7 @@ end;
 
 destructor TSimbaScriptTab.Destroy;
 begin
-  if (FFunctionListState <> nil) then
-    FunctionListState.Free();
+  FunctionListState := nil;
 
   inherited Destroy();
 end;
