@@ -334,10 +334,15 @@ type
 
   TSimbaAnchorDockHostSite = class(TAnchorDockHostSite)
   protected
+    FMenuItem: TMenuItem;
+
+    procedure MenuItemDestroyed(Sender: TObject);
+
+    procedure SetMenuItem(Value: TMenuItem);
     procedure SetVisible(Value: Boolean); override;
     procedure SetParent(Value: TWinControl); override;
   public
-    MenuItem: TMenuItem;
+    property MenuItem: TMenuItem read FMenuItem write SetMenuItem;
 
     procedure UpdateDockCaption(Exclude: TControl = nil); override;
 
@@ -377,6 +382,17 @@ begin
   Color := clForm;
 
   CloseButton.Parent := nil;
+end;
+
+procedure TSimbaAnchorDockHostSite.MenuItemDestroyed(Sender: TObject);
+begin
+  FMenuItem := nil;
+end;
+
+procedure TSimbaAnchorDockHostSite.SetMenuItem(Value: TMenuItem);
+begin
+  FMenuItem := Value;
+  FMenuItem.AddHandlerOnDestroy(@MenuItemDestroyed);
 end;
 
 procedure TSimbaAnchorDockHostSite.SetVisible(Value: Boolean);
@@ -590,7 +606,7 @@ end;
 
 function TSimbaForm.OnCCFindInclude(Sender: TObject; var FileName: string): Boolean;
 begin
-  Result := FindFile(Filename, [Application.Location, SimbaSettings.Environment.IncludePath.Value]);
+  Result := FindFile(Filename, [ExtractFileDir(TCodeInsight(Sender).FileName), SimbaSettings.Environment.IncludePath.Value, Application.Location]);
 end;
 
 function TSimbaForm.OnCCLoadLibrary(Sender: TObject; var Argument: string; out Parser: TCodeInsight): Boolean;
@@ -682,7 +698,7 @@ begin
         Save(ScriptFile);
 
       ScriptInstance := TSimbaScriptInstance.Create();
-      ScriptInstance.HandleOutput := True;
+      ScriptInstance.ManageOutput := True;
       ScriptInstance.TargetWindow := Self.WindowSelection;
       ScriptInstance.ScriptName := ScriptName;
 
@@ -710,7 +726,7 @@ begin
         Save(ScriptFile);
 
       ScriptInstance := TSimbaScriptInstance.Create();
-      ScriptInstance.HandleOutput := True;
+      ScriptInstance.ManageOutput := True;
       ScriptInstance.TargetWindow := Self.WindowSelection;
       ScriptInstance.ScriptName := ScriptName;
 
@@ -1228,7 +1244,7 @@ begin
     CloseAction := caFree;
 
     SimbaSettings.GUI.RecentFiles.Value := '';
-    for i := 0 to MenuItemOpenRecent.Count - 1 do
+    for i := MenuItemOpenRecent.Count - 1 downto 0 do
       SimbaSettings.GUI.RecentFiles.Value := SimbaSettings.GUI.RecentFiles.Value + ',' + MenuItemOpenRecent[i].Caption;
 
     SaveLayout();
@@ -1423,6 +1439,8 @@ begin
   if (not DirectoryIsWritable(Application.Location)) then
     ShowMessage('No permission to write to Simba''s directory. This will likely cause issues.');
 
+
+
   SimbaSplashForm.Execute('Initializing Console', @InitConsole);
   SimbaSplashForm.Execute('Initializing Docking', @InitDocking);
   SimbaSplashForm.Execute('Initializing OpenSSL', @InitOpenSSL);
@@ -1438,6 +1456,7 @@ begin
 
   ScriptProcessorTimer.Enabled := True;
 
+  Application.OnException := @CustomExceptionHandler;
   Application.QueueAsyncCall(@ResetDockingSplitters, 0);
 
   // Everything should be loaded. Display our forms!

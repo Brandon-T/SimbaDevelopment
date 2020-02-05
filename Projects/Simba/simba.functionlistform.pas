@@ -17,7 +17,7 @@ type
   end;
 
   TSimbaFunctionList_State = class(TTreeNodeExpandedState)
-  protected
+  public
     Filter: String;
     ScrolledLeft: Int32;
     ScrolledTop: Int32;
@@ -37,16 +37,17 @@ type
     constructor Create(FunctionList: TSimbaFunctionListForm); reintroduce;
   end;
 
+  TSimbaFunctionList_Filter = class(TTreeFilterEdit)
+  public
+    procedure Reset;
+    procedure Force(AFilter: String);
+  end;
+
   TSimbaFunctionListForm = class(TForm)
-    TreeFilterEdit: TTreeFilterEdit;
     TreeView: TTreeView;
 
     procedure HandleHint(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure HandleMouseLeave(Sender: TObject);
-    procedure TreeFilterEditAfterFilter(Sender: TObject);
-    procedure TreeFilterEditChange(Sender: TObject);
-    procedure TreeFilterEditKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
     procedure TreeViewDblClick(Sender: TObject);
   protected
     FParser: TCodeInsight;
@@ -57,6 +58,9 @@ type
     FSimbaNode: TTreeNode;
     FUpdater: TSimbaFunctionList_Updater;
     FHint: TSimbaFunctionList_Hint;
+    TreeEditFilter: TSimbaFunctionList_Filter;
+
+    procedure AfterFilter(Sender: TObject);
 
     procedure BeginUpdate;
     procedure EndUpdate;
@@ -76,6 +80,7 @@ type
     procedure addDeclarations(Declarations: TDeclarationList; ParentNode: TTreeNode; Clear, Sort, Expand: Boolean);
     procedure addIncludes(Includes: TCodeInsightArray);
 
+    procedure Reset;
     procedure Fill(Script: String; FileName: String);
 
     property State: TSimbaFunctionList_State read GetState write SetState;
@@ -110,6 +115,19 @@ type
     property ScrolledLeft: Int32 read GetScrolledLeft write SetScrolledLeft;
     property ScrolledTop: Int32 read GetScrolledTop write SetScrolledTop;
   end;
+
+
+procedure TSimbaFunctionList_Filter.Reset;
+begin
+  Force('');
+end;
+
+procedure TSimbaFunctionList_Filter.Force(AFilter: String);
+begin
+  Text := AFilter;
+  ApplyFilter(True);
+  IdleConnected := False;
+end;
 
 procedure TSimbaFunctionList_Updater.CheckUpdate;
 var
@@ -180,47 +198,53 @@ end;
 procedure TSimbaFunctionListForm.TreeViewDblClick(Sender: TObject);
 begin
   if (TreeView.Selected <> nil) and (TreeView.Selected.Data <> nil) then
-    SimbaScriptTabsForm.OpenDeclaration(TDeclaration(TreeView.Selected.Data));
+  begin
+    if TObject(TreeView.Selected.Data) is TCodeInsight then
+      SimbaScriptTabsForm.Open(TCodeInsight(TreeView.Selected.Data).FileName)
+    else
+    if TObject(TreeView.Selected.Data) is TDeclaration then
+      SimbaScriptTabsForm.OpenDeclaration(TDeclaration(TreeView.Selected.Data));
+  end;
+end;
+
+procedure TSimbaFunctionListForm.AfterFilter(Sender: TObject);
+begin
+  if TreeEditFilter.Filter <> '' then
+    TreeView.FullExpand()
+  else
+  begin
+    TreeView.FullCollapse();
+
+    FSimbaNode.Expanded := True;
+    FScriptNode.Expanded := True;
+  end;
 end;
 
 function TSimbaFunctionListForm.GetState: TSimbaFunctionList_State;
 begin
   Result := TSimbaFunctionList_State.Create(TreeView);
-  Result.Filter := TreeFilterEdit.Text;
+  Result.Filter := TreeEditFilter.Text;
   Result.ScrolledLeft := TreeView.ScrolledLeft;
   Result.ScrolledTop := TreeView.ScrolledTop;
 end;
-
-
-var
-  b: Int32 = 0;
 
 procedure TSimbaFunctionListForm.SetState(Value: TSimbaFunctionList_State);
 begin
   TreeView.BeginUpdate();
 
   try
-    TreeFilterEdit.Text := '';
-
-    FSimbaNode.Expanded := True;
-    FScriptNode.Expanded := True;
+    Reset();
 
     if (Value <> nil) then
     begin
-      if Value.Filter = '' then
-      begin
-        Value.Apply(TreeView);
-      end
-      else
-      begin
-        TreeFilterEdit.Text := Value.Filter;
-        TreeView.FullExpand();
-      end;
+      if (Value.Filter <> '') then
+        TreeEditFilter.Force(Value.Filter);
+
+      Value.Apply(TreeView);
 
       TreeView.ScrolledTop := Value.ScrolledTop;
       TreeView.ScrolledLeft := Value.ScrolledLeft;
     end;
-
   finally
     TreeView.EndUpdate();
   end;
@@ -236,7 +260,7 @@ var
 begin
   Node := TreeView.GetNodeAt(X, Y);
 
-  if (Node <> nil) and (Node.Data <> nil) then
+  if (Node <> nil) and (Node.Data <> nil) and (TObject(Node.Data) is TDeclaration) then
   begin
     Declaration := TDeclaration(Node.Data);
 
@@ -278,39 +302,16 @@ begin
   FHint.Visible := False;
 end;
 
-procedure TSimbaFunctionListForm.TreeFilterEditAfterFilter(Sender: TObject);
-begin
-  {
-  if b = 2 then
-  begin
-    Writeln('omg');
-  end;
-  Writeln('After filter');}
-  //if (TreeFilterEdit.Filter = '') then
-  //  TreeView.FullCollapse();
-end;
-
-procedure TSimbaFunctionListForm.TreeFilterEditChange(Sender: TObject);
-begin
-  if (TreeFilterEdit.Text = '') then
-    TreeView.FullCollapse();
-end;
-
-procedure TSimbaFunctionListForm.TreeFilterEditKeyDown(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-begin
-end;
-
 function TSimbaFunctionListForm.addPluginSection(Section: String): TTreeNode;
 begin
-  Result := TreeView.Items.Add(nil, ExtractFileNameOnly(Section));
+  Result := TreeView.Items.AddChild(FPluginsNode, ExtractFileNameOnly(Section));
   Result.ImageIndex := IMAGE_SCRIPT;
   Result.SelectedIndex := IMAGE_SCRIPT;
 end;
 
 function TSimbaFunctionListForm.addIncludeSection(Section: String): TTreeNode;
 begin
-  Result := TreeView.Items.Add(nil, ExtractFileNameOnly(Section));
+  Result := TreeView.Items.AddChild(FIncludesNode, ExtractFileNameOnly(Section));
   Result.ImageIndex := IMAGE_SCRIPT;
   Result.SelectedIndex := IMAGE_SCRIPT;
 end;
@@ -406,16 +407,31 @@ end;
 procedure TSimbaFunctionListForm.addIncludes(Includes: TCodeInsightArray);
 var
   i: Int32;
+  Section: TTreeNode;
 begin
   for i := 0 to High(Includes) do
   begin
     if Includes[i].IsLibrary then
-      addDeclarations(Includes[i].Items, addPluginSection(ExtractFileNameOnly(Includes[i].FileName)), False, False, False)
+      Section := addPluginSection(ExtractFileNameOnly(Includes[i].FileName))
     else
-      addDeclarations(Includes[i].Items, addIncludeSection(Includes[i].FileName), False, False, False);
+    begin
+      Section := addIncludeSection(ExtractFileNameOnly(Includes[i].FileName));
+      Section.Data := Includes[i];
+    end;
 
+    addDeclarations(Includes[i].Items, Section, False, False, False);
     addIncludes(Includes[i].Includes);
   end;
+end;
+
+procedure TSimbaFunctionListForm.Reset;
+begin
+  TreeEditFilter.Reset();
+
+  TreeView.FullCollapse();
+
+  FSimbaNode.Expanded := True;
+  FScriptNode.Expanded := True;
 end;
 
 procedure TSimbaFunctionListForm.Fill(Script: String; FileName: String);
@@ -424,9 +440,20 @@ begin
 
   FReplacementParser := TCodeInsight.Create();
   FReplacementParser.FileName := FileName;
+  FReplacementParser.OnMessage := @SimbaForm.OnCCMessage;
+  FReplacementParser.OnFindInclude := @SimbaForm.OnCCFindInclude;
+  FReplacementParser.OnLoadLibrary := @SimbaForm.OnCCLoadLibrary;
   FReplacementParser.Run(Script);
 
   addDeclarations(FReplacementParser.Items, FScriptNode, True, False, True);
+
+  if (FParser = nil) or (FReplacementParser.IncludesHash <> FParser.IncludesHash) then
+  begin
+    FPluginsNode.DeleteChildren();
+    FIncludesNode.DeleteChildren();
+
+    addIncludes(FReplacementParser.Includes);
+  end;
 
   TThread.Synchronize(nil, @EndUpdate);
 end;
@@ -473,6 +500,15 @@ begin
 
   FHint := TSimbaFunctionList_Hint.Create(Self);
   FUpdater := TSimbaFunctionList_Updater.Create(Self);
+
+  TreeEditFilter := TSimbaFunctionList_Filter.Create(Self);
+  TreeEditFilter.Parent := Self;
+  TreeEditFilter.Align := alBottom;
+  TreeEditFilter.FilteredTreeview := TreeView;
+  TreeEditFilter.OnAfterFilter := @AfterFilter;
+  TreeEditFilter.ButtonWidth := 0;
+  TreeEditFilter.Spacing := 0;
+  TreeEditFilter.TextHint := '(search)';
 end;
 
 destructor TSimbaFunctionListForm.Destroy;

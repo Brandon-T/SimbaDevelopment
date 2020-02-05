@@ -241,38 +241,30 @@ end;
 
 procedure TSimbaScript.HandleException(E: Exception);
 var
-  Message, FileName: ShortString;
-  Line, Column: Int32;
+  Param: TSimbaMethod_ScriptError;
   Method: TSimbaMethod;
 begin
-  Message := '';
-  FileName := '';
-  Line := -1;
-  Column := -1;
+  Param := Default(TSimbaMethod_ScriptError);
+  Param.Line := -1;
+  Param.Column := -1;
 
   if (E is lpException) then
   begin
-    Message := E.Message;
+    Param.Message := E.Message;
 
     with E as lpException do
     begin
-      FileName := DocPos.FileName;
-      Line := DocPos.Line;
-      Column := DocPos.Col;
+      Param.FileName := DocPos.FileName;
+      Param.Line := DocPos.Line;
+      Param.Column := DocPos.Col;
     end;
-
-    if not FileExists(FileName) and (FileName <> ScriptName) then
-      Message := StringReplace(Message, 'in file', 'in internal file', []);
   end else
-    Message := E.Message + ' (' + E.ClassName + ')';
+    Param.Message := E.Message + ' (' + E.ClassName + ')';
 
-  Self._WriteLn(Message);
+  Self._WriteLn(Param.Message);
 
   Method := TSimbaMethod.Create(SIMBA_METHOD_SCRIPT_ERROR);
-  Method.Params.Write(Message, SizeOf(ShortString));
-  Method.Params.Write(FileName, SizeOf(ShortString));
-  Method.Params.Write(Line, SizeOf(Int32));
-  Method.Params.Write(Column, SizeOf(Int32));
+  Method.Params.Write(Param, SizeOf(Param));
   Method.Invoke(Script);
   Method.Free();
 end;
@@ -499,6 +491,8 @@ begin
       if ExtractFileExt(FScriptFile) = '.tmp' then
         DeleteFile(FScriptFile);
 
+      FScriptFile := FScriptName;
+
       Free();
     end;
   except
@@ -506,7 +500,7 @@ begin
       raise Exception.Create('Unable to load script: ' + e.Message);
   end;
 
-  FCompiler := TScriptCompiler.Create(FScript, FScriptName);
+  FCompiler := TScriptCompiler.Create(FScript, FScriptFile);
   FCompiler.OnFindFile := @HandleFindFile;
   FCompiler.OnHint := @HandleHint;
   FCompiler.OnHandleDirective := @HandleDirective;
