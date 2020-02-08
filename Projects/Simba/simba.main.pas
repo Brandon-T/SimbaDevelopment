@@ -1409,17 +1409,16 @@ begin
     ScriptInstance.Script := 'begin end.';
     ScriptInstance.Dump();
 
-    SetLength(CoreBuffer, ScriptInstance.Output.Count);
+    SetLength(InternalParsers, ScriptInstance.Output.Count);
 
     for i := 0 to ScriptInstance.Output.Count - 1 do
     begin
-      CoreBuffer[i] := TCodeInsight.Create();
-      CoreBuffer[i].FileName := ScriptInstance.Output.Names[i];
-      CoreBuffer[i].OnMessage := @Self.OnCCMessage;
-      CoreBuffer[i].Run(ScriptInstance.Output.ValueFromIndex[i]);
+      InternalParsers[i] := TCodeParser.Create();
+      InternalParsers[i].OnMessage := @Self.OnCCMessage;
+      InternalParsers[i].Run(ScriptInstance.Output.ValueFromIndex[i], ScriptInstance.Output.Names[i]);
 
-      if CoreBuffer[i].FileName <> 'Classes' then
-        SimbaFunctionListForm.addDeclarations(CoreBuffer[i].Items, SimbaFunctionListForm.addSimbaSection(CoreBuffer[i].FileName), False, True, False);
+      if InternalParsers[i].FileName <> 'Classes' then
+        SimbaFunctionListForm.addDeclarations(InternalParsers[i].Items, SimbaFunctionListForm.addSimbaSection(InternalParsers[i].FileName), False, True, False);
     end;
 
     SimbaFunctionListForm.SimbaNode.Expanded := True;

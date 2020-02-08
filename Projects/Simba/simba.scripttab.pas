@@ -93,12 +93,7 @@ begin
     Exit;
 
   Parser := Self.ParseScript();
-
-  if Expression.Contains('.') then
-  begin
-    Parser.ParseExpression(Expression, Declarations);
-  end else
-    Declarations := Parser.getDeclarations(Expression);
+  Declarations := Parser.FindDeclaration(Expression);
 
   if Length(Declarations) = 1 then
     SimbaScriptTabsForm.OpenDeclaration(Declarations[0])
@@ -130,6 +125,7 @@ procedure TSimbaScriptTab.HandleAutoComplete;
 var
   Expression, Filter: String;
   Declaration: TDeclaration;
+  Declarations: TDeclarationArray;
   P: TPoint;
 begin
   Filter := '';
@@ -148,7 +144,7 @@ begin
       Expression := Copy(Expression, 1, LastDelimiter('.', Expression) - 1);
     end;
 
-    Declaration := FEditor.AutoComplete.Parser.ParseExpression(Expression);
+    Declaration := FEditor.AutoComplete.Parser._ParseExpression(Expression);
     if Declaration <> nil then
       FEditor.AutoComplete.FillTypeDeclarations(Declaration);
   end else
@@ -173,7 +169,8 @@ var
   Expression, Identifier, ScriptText: String;
   Invoked: Boolean;
   Declaration: TDeclaration;
-  Declarations: TDeclarationArray;
+  Declarations, res: TDeclarationArray;
+  i: Int32;
 begin
   ScriptText := Script;
 
@@ -202,10 +199,33 @@ begin
 
   FEditor.ParameterHint.Parser := Self.ParseScript();
 
+  Declarations := FEditor.ParameterHint.Parser.FindDeclaration(Expression);
+  for i := 0 to High(Declarations) do
+  begin
+    if Declarations[i] is TciProcedureDeclaration then
+      res += Declarations[i];
+    Writeln(Declarations[i].ClassName);
+    Writeln('get');
+    Declaration := FEditor.ParameterHint.Parser.GetType(Declarations[i]);
+    if Declaration = nil then
+      WRiteln('nil')
+    else
+      WRiteln('GOT: ', Declaration.ClassName);
+    if Declaration is TciTypeDeclaration then
+    begin
+      Declaration := FEditor.ParameterHint.Parser.GetType(Declaration);
+      writeln('typ is now: ', Declaration.ClassName);
+    end;
+    if Declaration is TciProcedureDeclaration then
+      res += Declaration;
+  end;
+
+
+  {
   if Expression.Contains('.') then
   begin
     Identifier := Copy(Expression, LastDelimiter('.', Expression) + 1, $FFFFFF);
-    Declaration := FEditor.ParameterHint.Parser.ParseExpression(Expression, Declarations);
+    //Declaration := FEditor.ParameterHint.Parser.ParseExpression(Expression);
 
     if Invoked then
     begin
@@ -214,17 +234,17 @@ begin
     end;
   end else
   begin
-    Identifier := CleanExpression(Expression);
-    Declarations := FEditor.ParameterHint.Parser.getDeclarations(Identifier);
+   // Identifier := CleanExpression(Expression);
+   // Declarations := FEditor.ParameterHint.Parser.getDeclarations(Identifier);
   end;
-
-  if Length(Declarations) > 0 then
+    }
+  if Length(res) > 0 then
   begin
     if Invoked then
       Identifier := '';
 
     FEditor.ParameterHint.Show(FEditor.CharIndexToRowCol(BracketPos - Length(Identifier) - 1),
-                        FEditor.CharIndexToRowCol(BracketPos - 1), Declarations, Invoked);
+                        FEditor.CharIndexToRowCol(BracketPos - 1), res, Invoked);
 
     Exit;
   end;
@@ -392,10 +412,13 @@ function TSimbaScriptTab.ParseScript: TCodeInsight;
 begin
   Result := TCodeInsight.Create();
   Result.FileName := ScriptFile;
+  if Result.FileName = '' then
+    Result.FileName := ScriptName;
   Result.OnMessage := @SimbaForm.OnCCMessage;
   Result.OnFindInclude := @SimbaForm.OnCCFindInclude;
   Result.OnLoadLibrary := @SimbaForm.OnCCLoadLibrary;
-  Result.Run(Script, FEditor.SelStart - 1);
+  Result.Run(Script);
+  Result.Position := Feditor.SelStart - 1;
 end;
 
 procedure TSimbaScriptTab.MakeVisible;
