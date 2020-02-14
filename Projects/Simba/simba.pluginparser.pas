@@ -31,6 +31,7 @@ var
   GetCode: procedure(var Code: PChar); cdecl;
   GetCodeLength: function: Int32; cdecl;
 begin
+  {
   Result := nil;
 
   Lib := NilHandle;
@@ -110,11 +111,13 @@ begin
           StrDispose(Str);
         end;
       end;
-
+       {
       Result := TCodeInsight.Create();
       Result.FileName := Plugin;
       Result.OnMessage := @SimbaForm.OnCCMessage;
       Result.Run(Script);
+      }
+      Result := nil;
     end;
   except
     on E: Exception do
@@ -122,7 +125,7 @@ begin
   end;
 
   if Lib <> NilHandle then
-    FreeLibrary(Lib);
+    FreeLibrary(Lib);  }
 end;
 
 end.

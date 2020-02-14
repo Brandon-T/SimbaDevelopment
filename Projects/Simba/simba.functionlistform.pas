@@ -78,7 +78,6 @@ type
     procedure addVar(Declaration: TciVarDeclaration; ParentNode: TTreeNode);
     procedure addConst(Declaration: TciConstantDeclaration; ParentNode: TTreeNode);
     procedure addDeclarations(Declarations: TDeclarationList; ParentNode: TTreeNode; Clear, Sort, Expand: Boolean);
-    procedure addIncludes(Includes: TCodeInsightArray);
 
     procedure Reset;
     procedure Fill(Script: String; FileName: String);
@@ -199,11 +198,12 @@ procedure TSimbaFunctionListForm.TreeViewDblClick(Sender: TObject);
 begin
   if (TreeView.Selected <> nil) and (TreeView.Selected.Data <> nil) then
   begin
+    {
     if TObject(TreeView.Selected.Data) is TCodeInsight then
       SimbaScriptTabsForm.Open(TCodeInsight(TreeView.Selected.Data).FileName)
     else
     if TObject(TreeView.Selected.Data) is TDeclaration then
-      SimbaScriptTabsForm.OpenDeclaration(TDeclaration(TreeView.Selected.Data));
+      SimbaScriptTabsForm.OpenDeclaration(TDeclaration(TreeView.Selected.Data)); }
   end;
 end;
 
@@ -305,15 +305,15 @@ end;
 function TSimbaFunctionListForm.addPluginSection(Section: String): TTreeNode;
 begin
   Result := TreeView.Items.AddChild(FPluginsNode, ExtractFileNameOnly(Section));
-  Result.ImageIndex := IMAGE_SCRIPT;
-  Result.SelectedIndex := IMAGE_SCRIPT;
+  Result.ImageIndex := IMAGE_FILE;
+  Result.SelectedIndex := IMAGE_FILE;
 end;
 
 function TSimbaFunctionListForm.addIncludeSection(Section: String): TTreeNode;
 begin
   Result := TreeView.Items.AddChild(FIncludesNode, ExtractFileNameOnly(Section));
-  Result.ImageIndex := IMAGE_SCRIPT;
-  Result.SelectedIndex := IMAGE_SCRIPT;
+  Result.ImageIndex := IMAGE_FILE;
+  Result.SelectedIndex := IMAGE_FILE;
 end;
 
 function TSimbaFunctionListForm.addNode(Declaration: TDeclaration; ParentNode: TTreeNode): TTreeNode;
@@ -404,6 +404,7 @@ begin
     ParentNode.Expanded := True;
 end;
 
+{
 procedure TSimbaFunctionListForm.addIncludes(Includes: TCodeInsightArray);
 var
   i: Int32;
@@ -423,7 +424,7 @@ begin
     addDeclarations(Includes[i].Items, Section, False, False, False);
     addIncludes(Includes[i].Includes);  }
   end;
-end;
+end;  }
 
 procedure TSimbaFunctionListForm.Reset;
 begin
@@ -436,17 +437,49 @@ begin
 end;
 
 procedure TSimbaFunctionListForm.Fill(Script: String; FileName: String);
+var
+  i: Int32;
+  Declarations: TDeclarationArray;
+  node: TTreeNode;
+  currentFile: String;
+  currentNode: TTreeNode;
 begin
   TThread.Synchronize(nil, @BeginUpdate);
 
   FReplacementParser := TCodeInsight.Create();
-  FReplacementParser.FileName := FileName;
   FReplacementParser.OnMessage := @SimbaForm.OnCCMessage;
   FReplacementParser.OnFindInclude := @SimbaForm.OnCCFindInclude;
+  FReplacementParser.OnFindLibrary := @SimbaForm.OnCCFindLibrary;
   FReplacementParser.OnLoadLibrary := @SimbaForm.OnCCLoadLibrary;
-  FReplacementParser.Run(Script);
+  FReplacementParser.Run(Script, FileName);
 
   addDeclarations(FReplacementParser.Items, FScriptNode, True, False, True);
+
+  FIncludesNode.DeleteChildren();
+  Declarations := FReplacementParser.Includes[0].Globals.ExportToArrays.Items;
+  for i := 0 to High(Declarations) do
+  begin
+    if currentFile <> Declarations[i].Lexer.FileName then
+    begin
+      currentFile := Declarations[i].Lexer.FileName;
+      currentNode := addIncludeSection(currentFile);
+    end;
+
+    if (Declarations[i] is TciProcedureDeclaration) then
+      addMethod(Declarations[i] as TciProcedureDeclaration, currentNode)
+    else
+    if (Declarations[i] is TciTypeDeclaration) then
+      addType(Declarations[i] as TciTypeDeclaration, currentNode)
+    else
+    if (Declarations[i] is TciConstantDeclaration) then
+      addConst(Declarations[i] as TciConstantDeclaration, currentNode)
+    else
+    if (Declarations[i] is TciVarDeclaration) then
+      addVar(Declarations[i] as TciVarDeclaration, currentNode);
+  end;
+
+  for i := 0 to FIncludesNode.Count - 1 do
+    FIncludesNode[i].Text := ExtractFileName(FIncludesNode[i].Text);
 
   {
   if (FParser = nil) or (FReplacementParser.IncludesHash <> FParser.IncludesHash) then
@@ -527,8 +560,8 @@ end;
 function TSimbaFunctionListForm.addSimbaSection(Section: String): TTreeNode;
 begin
   Result := TreeView.Items.AddChild(FSimbaNode, Section);
-  Result.ImageIndex := IMAGE_SCRIPT;
-  Result.SelectedIndex := IMAGE_SCRIPT;
+  Result.ImageIndex := IMAGE_FILE;
+  Result.SelectedIndex := IMAGE_FILE;
 end;
 
 initialization

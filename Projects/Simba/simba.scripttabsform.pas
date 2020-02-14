@@ -639,7 +639,7 @@ var
   FileName: String;
   IsLibrary: Boolean;
 begin
-  FileName := TCodeInsight(Declaration.Parser).FileName;
+  //FileName := TCodeInsight(Declaration.Parser).FileName;
   //IsLibrary := TCodeInsight(Declaration.Parser).IsLibrary;
 
   if (FileName = '') or FileExists(FileName) then

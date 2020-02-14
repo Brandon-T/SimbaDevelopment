@@ -25,6 +25,11 @@ begin
   Clear();
 end;
 
+constructor TSimbaStringMap.Create;
+begin
+  Create(Default(_T), dupAccept, False);
+end;
+
 destructor TSimbaStringMap.Destroy;
 begin
   FStringList.Free();

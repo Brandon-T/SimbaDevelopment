@@ -26,7 +26,6 @@ type
   public
     function GetItemsOfClass(AClass: TDeclarationClass; SubSearch: Boolean = False): TDeclarationArray;
     function GetFirstItemOfClass(AClass: TDeclarationClass; SubSearch: Boolean = False): TDeclaration;
-    function GetItemInPos(AStart, AEnd: Integer; SubSearch: Boolean = False): TDeclaration;
 
     function GetRawText(AClass: TDeclarationClass): String;
     function GetCleanText(AClass: TDeclarationClass): String;
@@ -43,9 +42,6 @@ type
   TciProcedureDeclaration = class;
   TciTypeKind = class;
 
-  TDeclarationTypeMap = specialize TSimbaStringMap<TciTypeDeclaration>;
-  TDeclarationMethodMap = specialize TSimbaStringMap<TDeclaration>;
-
   TDeclaration = class
   private
     FParser: TmwSimplePasPar;
@@ -61,6 +57,7 @@ type
     FNameCached: Boolean;
     FNameHash: UInt32;
     FLine: Int32;
+    FLexer: TmwPasLex;
 
     function GetRawText: string; virtual;
     function GetCleanText: string; virtual;
@@ -76,6 +73,7 @@ type
     function IsName(Value: String): Boolean; inline; overload;
     function IsVisible: Boolean; inline;
 
+    property Lexer: TmwPasLex read FLexer;
     property Parser: TmwSimplePasPar read FParser;
     property Owner: TDeclaration read FOwner write FOwner;
     property Origin: PAnsiChar read FOrigin;
@@ -95,7 +93,12 @@ type
     destructor Destroy; override;
   end;
 
-  TciNativeType = class(TDeclaration);
+  TciNativeType = class(TDeclaration)
+  protected
+    function GetParent: String;
+  public
+    property Parent: String read GetParent;
+  end;
 
   TciTypeCopy = class(TDeclaration);
   TciTypeAlias = class(TDeclaration);
@@ -104,7 +107,6 @@ type
   protected
     function GetName: string; override;
   end;
-
 
   TciEnumType = class(TDeclaration)
   protected
@@ -181,7 +183,7 @@ type
     property Header: String read GetHeader;
   end;
 
-    TciProceduralType = class(TciProcedureDeclaration);
+  TciProceduralType = class(TciProcedureDeclaration);
 
   TciInclude = class(TDeclaration);
   TciJunk = class(TDeclaration);
@@ -197,6 +199,8 @@ type
   TciTypeDeclaration = class(TDeclaration)
   private
     function GetEnumType: TciEnumType;
+    function GetMethodType: TciProceduralType;
+    function GetNativeMethodType: TciNativeType;
     function GetRecordType: TciRecordType;
   protected
     FParent: String;
@@ -209,6 +213,8 @@ type
     function GetType: TDeclaration;
     function GetFields: TDeclarationArray;
     function GetEnumElements: TDeclarationArray;
+    property NativeMethodType: TciNativeType read GetNativeMethodType;
+    property MethodType: TciProceduralType read GetMethodType;
     property RecordType: TciRecordType read GetRecordType;
     property ArrayType: TciArrayType read GetArrayType;
     property EnumType: TciEnumType read GetEnumType;
@@ -262,13 +268,31 @@ type
 
   TciOrdinalType = class(TDeclaration);
 
+  TOnFindInclude = function(Sender: TObject; var FileName: string): Boolean of object;
+  TOnInclude = procedure(Sender: TObject; FileName: String; var Handled: Boolean) of object;
+
+  TOnFindLibrary = function(Sender: TObject; var FileName: String): Boolean of object;
+  TOnLoadLibrary = procedure(Sender: TObject; FileName: String; var Contents: String) of object;
+  TOnLibrary = procedure(Sender: TObject; FileName: String; var Handled: Boolean) of object;
+
   TCodeParser = class(TmwSimplePasPar)
   protected
-    FStream: TMemoryStream;
-    FFileName: String;
     FStack: TDeclarationStack;
     FItems: TDeclarationList;
     FTokenPos: Int32;
+    FLexers: array of TmwPasLex;
+    FLexerStack: array of TmwPasLex;
+    FOnFindInclude: TOnFindInclude;
+    FOnInclude: TOnInclude;
+    FOnFindLibrary: TOnFindInclude;
+    FOnLoadLibrary: TOnLoadLibrary;
+    FOnLibrary: TOnLibrary;
+    FGlobals: TDeclarationMap;
+    FLocals: TDeclarationMap;
+    FFiles: TStringList;
+
+    procedure PushLexer(ALexer: TmwPasLex);
+    procedure PopLexer;
 
     procedure SeperateVariables(Variables: TciVarDeclaration);
 
@@ -278,7 +302,8 @@ type
     procedure PopStack(AEnd: Integer = -1);
 
     procedure ParseFile; override;
-    procedure OnInclude(Sender: TmwBasePasLex); virtual;                        //Includes
+    procedure OnLibraryDirect(Sender: TmwBasePasLex); virtual;
+    procedure OnIncludeDirect(Sender: TmwBasePasLex); virtual;                        //Includes
     procedure NextToken; override;                                              //Junk
     procedure OnDirect(Sender: TmwBasePasLex);                                  //Junk
 
@@ -340,23 +365,31 @@ type
     procedure EnumeratedType; override;                                         //Enum
     procedure QualifiedIdentifier; override;                                    //Enum
   public
-    property FileName: String read FFileName write FFileName;
-
     property Items: TDeclarationList read FItems;
+    property Globals: TDeclarationMap read FGlobals;
 
-    procedure Run; virtual; overload;
-    procedure Run(Script: String; AFileName: String = ''); virtual; overload;
+    property OnFindInclude: TOnFindInclude read FOnFindInclude write FOnFindInclude;
+    property OnInclude: TOnInclude read FOnInclude write FOnInclude;
 
-    constructor Create(AFileName: String = ''); virtual;
+    property OnFindLibrary: TOnFindInclude read FOnFindLibrary write FOnFindLibrary;
+    property OnLoadLibrary: TOnLoadLibrary read FOnLoadLibrary write FOnLoadLibrary;
+    property OnLibrary: TOnLibrary read FOnLibrary write FOnLibrary;
+
+    procedure Run; overload; override;
+
+    procedure Assign(From: TObject); override;
+
+    constructor Create; virtual;
     destructor Destroy; override;
   end;
-
-  TCodeParserArray = array of TCodeParser;
 
 operator + (Left: TDeclarationArray; Right: TDeclaration): TDeclarationArray;
 operator + (Left: TDeclarationArray; Right: TDeclarationArray): TDeclarationArray;
 
 implementation
+
+uses
+  simba.main;
 
 operator + (Left: TDeclarationArray; Right: TDeclaration): TDeclarationArray;
 begin
@@ -379,6 +412,11 @@ begin
     if Length(Right) > 0 then
       Move(Right[0], Result[Length(Left)], Length(Right) * SizeOf(TDeclarationArray));
   end;
+end;
+
+function TciNativeType.GetParent: String;
+begin
+  Result := FItems.GetRawText(TciAncestorId);
 end;
 
 procedure TDeclarationMap.Add(Declaration: TDeclaration);
@@ -518,6 +556,28 @@ begin
     Result := TciEnumType(Declaration);
 end;
 
+function TciTypeDeclaration.GetMethodType: TciProceduralType;
+var
+  Declaration: TDeclaration;
+begin
+  Result := nil;
+
+  Declaration := GetType();
+  if (Declaration <> nil) and (Declaration is TciProceduralType) then
+    Result := TciProceduralType(Declaration);
+end;
+
+function TciTypeDeclaration.GetNativeMethodType: TciNativeType;
+var
+  Declaration: TDeclaration;
+begin
+  Result := nil;
+
+  Declaration := GetType();
+  if (Declaration <> nil) and (Declaration is TciNativeType) then
+    Result := TciNativeType(Declaration);
+end;
+
 function TciTypeDeclaration.GetRecordType: TciRecordType;
 var
   Declaration: TDeclaration;
@@ -528,7 +588,6 @@ begin
   if (Declaration <> nil) and (Declaration is TciRecordType) then
     Result := TciRecordType(Declaration);
 end;
-
 function TciTypeDeclaration.GetArrayType: TciArrayType;
 var
   Declaration: TDeclaration;
@@ -670,45 +729,6 @@ begin
   for i := 0 to FCount - 1 do
     if SearchItem(AClass, SubSearch, FItems[i], Result) then
       Exit;
-end;
-
-function TDeclarationList.GetItemInPos(AStart,  AEnd: Integer; SubSearch: Boolean = False): TDeclaration;
-
-  function SearchItem(AStart, AEnd: Integer; SubSearch: Boolean; Item: TDeclaration; out Res: TDeclaration): Boolean;
-  var
-    i: Integer;
-    b: Boolean;
-  begin
-    Result := False;;
-
-    b := (AStart >= Item.StartPos) and (AEnd <= Item.EndPos);
-    if b and ((Item.Items.Count < 1) or (not SubSearch)) then
-    begin
-      Res := Item;
-      Result := True;
-      Exit;
-    end;
-    if SubSearch and b then
-      for i := 0 to Item.Items.Count - 1 do
-        if SearchItem(AStart, AEnd, SubSearch, Item.Items[i], Res) then
-        begin
-          Result := True;
-          Break;
-        end;
-    if b and (not Result) then
-    begin
-      Res := Item;
-      Result := True;
-    end;
-  end;
-
-var
-  i: Integer;
-begin
-  Result := nil;
-
-  for i := 0 to FCount - 1 do
-    SearchItem(AStart, AEnd, SubSearch, FItems[i], Result);
 end;
 
 function TDeclarationList.GetRawText(AClass: TDeclarationClass): String;
@@ -901,6 +921,7 @@ begin
 
   FParser := AParser;
   FLine := AParser.Lexer.LineNumber;
+  FLexer := AParser.Lexer;
   FOwner := AOwner;
   FOrigin := AOrigin;
   FRawText := '';
@@ -1071,6 +1092,42 @@ begin
   FStack.Push(Result);
 end;
 
+procedure TCodeParser.PushLexer(ALexer: TmwPasLex);
+begin
+  if Length(FLexerStack) > 100 then
+    raise Exception.Create('Recursive include detected');
+
+  ALexer.CloneDefinesFrom(fLexer);
+
+  SetLength(FLexers, Length(FLexers) + 1);
+  FLexers[High(FLexers)] := ALexer;
+
+  SetLength(FLexerStack, Length(FLexerStack) + 1);
+  FLexerStack[High(FLexerStack)] := ALexer;
+
+  fLexer := ALexer;
+  fLexer.OnIncludeDirect := @OnIncludeDirect;
+  fLexer.OnLibraryDirect := @OnLibraryDirect;
+  fLexer.OnDefineDirect := @OnDirect;
+  fLexer.OnElseDirect := @OnDirect;
+  fLexer.OnEndIfDirect := @OnDirect;
+  fLexer.OnIfDefDirect := @OnDirect;
+  fLexer.OnIfNDefDirect := @OnDirect;
+  fLexer.OnUnDefDirect := @OnDirect;
+  fLexer.OnIfDirect := @OnDirect;
+  fLexer.OnIfEndDirect := @OnDirect;
+  fLexer.OnElseIfDirect := @OnDirect;
+  fLexer.OnCompDirect := @OnDirect;
+end;
+
+procedure TCodeParser.PopLexer;
+begin
+  FLexerStack[High(FLexerStack)-1].CloneDefinesFrom(FLexerStack[High(FLexerStack)]);
+  SetLength(FLexerStack, Length(FLexerStack) - 1);
+
+  FLexer := FLexerStack[High(FLexerStack)];
+end;
+
 procedure TCodeParser.SeperateVariables(Variables: TciVarDeclaration);
 var
   i: Int32;
@@ -1124,38 +1181,31 @@ begin
   FStack.Pop();
 end;
 
-constructor TCodeParser.Create(AFileName: String);
+constructor TCodeParser.Create;
 begin
-  inherited Create;
-
-  FStream := TMemoryStream.Create();
-
-  FFileName := AFileName;
-  if (FFileName <> '') then
-    FStream.LoadFromFile(FFileName);
+  inherited Create();
 
   FStack := TDeclarationStack.Create;
   FItems := TDeclarationList.Create(True);
+  FGlobals := TDeclarationMap.Create();
+  FLocals := TDeclarationMap.Create();
+  FFiles := TStringList.Create();
 
-  Lexer.OnIncludeDirect := {$IFDEF FPC}@{$ENDIF}OnInclude;
-  Lexer.OnDefineDirect := {$IFDEF FPC}@{$ENDIF}OnDirect;
-  Lexer.OnElseDirect := {$IFDEF FPC}@{$ENDIF}OnDirect;
-  Lexer.OnEndIfDirect := {$IFDEF FPC}@{$ENDIF}OnDirect;
-  Lexer.OnIfDefDirect := {$IFDEF FPC}@{$ENDIF}OnDirect;
-  Lexer.OnIfNDefDirect := {$IFDEF FPC}@{$ENDIF}OnDirect;
-  Lexer.OnUnDefDirect := {$IFDEF FPC}@{$ENDIF}OnDirect;
-  Lexer.OnIfDirect := {$IFDEF FPC}@{$ENDIF}OnDirect;
-  Lexer.OnIfEndDirect := {$IFDEF FPC}@{$ENDIF}OnDirect;
-  Lexer.OnElseIfDirect := {$IFDEF FPC}@{$ENDIF}OnDirect;
+  PushLexer(FLexer);
 end;
 
 destructor TCodeParser.Destroy;
+var
+  I: Int32;
 begin
   FStack.Free();
   FItems.Free();
+  FGlobals.Free();
+  FLocals.Free();
+  FFiles.Free();
 
-  if (FStream <> nil) then
-    FStream.Free();
+  for I := 1 to High(FLexers) do
+    FLexers[i].Free();
 
   inherited;
 end;
@@ -1212,22 +1262,102 @@ begin
   end;
 end;
 
-procedure TCodeParser.OnInclude(Sender: TmwBasePasLex);
+procedure TCodeParser.OnLibraryDirect(Sender: TmwBasePasLex);
+var
+  FileName, Contents: String;
+  Handled: Boolean;
+begin
+  Contents := '';
+
+  if (not Sender.IsJunk) then
+  begin
+    FileName := SetDirSeparators(Sender.DirectiveParamOriginal);
+
+    if (FOnFindLibrary <> nil) then
+    begin
+      if FOnFindLibrary(Self, FileName) then
+      begin
+        Handled := False;
+        if (FOnLibrary <> nil) then
+          FOnLibrary(Self, FileName, Handled);
+
+        if not Handled then
+        try
+          if (FOnLoadLibrary <> nil) then
+          begin
+            FOnLoadLibrary(Self, FileName, Contents);
+
+            PushLexer(TmwPasLex.Create());
+
+            FLexer.FileName := FileName;
+            FLexer.Script := Contents;
+
+            FFiles.AddObject(FileName, TObject(PtrInt(FileAge(FileName))));
+          end;
+        except
+          on E: Exception do
+          begin
+            if (OnMessage <> nil) then
+              OnMessage(Self, meError, E.Message, Sender.PosXY.X, Sender.PosXY.Y);
+          end;
+        end;
+      end;
+    end;
+  end;
+
+  Sender.Next();
+end;
+
+procedure TCodeParser.OnIncludeDirect(Sender: TmwBasePasLex);
+var
+  FileName: String;
+  Handled: Boolean;
 begin
   if (not Sender.IsJunk) then
   begin
-    PushStack(TciInclude, Sender.TokenPos);
-    FStack.Top.RawText := SetDirSeparators(Sender.DirectiveParamOriginal);
-    PopStack(Sender.TokenPos + Sender.TokenLen);
+    FileName := SetDirSeparators(Sender.DirectiveParamOriginal);
+
+    if (FOnFindInclude <> nil) and FOnFindInclude(Self, FileName) then
+    begin
+      Handled := (Sender.TokenID = tokIncludeOnceDirect) and (FFiles.IndexOf(FileName) > -1);
+
+      if not Handled then
+      begin
+        FFiles.AddObject(FileName, TObject(PtrInt(FileAge(FileName))));
+        if (FOnInclude <> nil) then
+          FOnInclude(Self, FileName, Handled);
+
+        if not Handled then
+        try
+          PushLexer(TmwPasLex.Create());
+
+          with TStringList.Create() do
+          try
+            LoadFromFile(FileName);
+
+            FLexer.FileName := FileName;
+            FLexer.Script := Text;
+          finally
+            Free();
+          end;
+        except
+          on E: Exception do
+          begin
+            if OnMessage <> nil then
+              OnMessage(Self, meError, E.Message, Sender.PosXY.X, Sender.PosXY.Y);
+          end;
+        end;
+      end;
+    end else
+      WriteLn('Include not found: ', FileName);
   end;
 
-  Sender.Next;
+  Sender.Next();
 end;
 
 procedure TCodeParser.NextToken;
 begin
   Lexer.Next;
-
   FTokenPos := Lexer.TokenPos;
 
   if Lexer.IsJunk and (not InDeclaration(TciJunk)) then
@@ -1246,6 +1376,13 @@ begin
 
     if InDeclaration(TciJunk) then
       PopStack(Lexer.TokenPos);
+  end;
+
+  if (Lexer.TokenID = tokNull) and (Length(FLexerStack) > 1) then
+  begin
+    PopLexer();
+
+    NextToken();
   end;
 end;
 
@@ -1807,7 +1944,7 @@ end;
 
 procedure TCodeParser.OrdinalType;
 begin
-  if (not InDeclarations([TciArrayType])) then
+  if (not InDeclaration(TciArrayType)) then
   begin
     inherited;
     Exit;
@@ -1827,7 +1964,7 @@ end;
 
 procedure TCodeParser.QualifiedIdentifier;
 begin
-  if (not InDeclarations([TciEnumType])) then
+  if (not InDeclaration(TciEnumType)) then
   begin
     inherited;
     Exit;
@@ -1839,19 +1976,47 @@ begin
 end;
 
 procedure TCodeParser.Run;
+var
+  Declaration: TDeclaration;
+  I: Int32;
 begin
-  inherited Run(FStream);
+  FFiles.Clear();
+  if FileExists(fLexer.FileName) then
+    FFiles.AddObject(fLexer.FileName, TObject(PtrInt(FileAge(fLexer.FileName))));
+
+  inherited Run();
+
+  for I := 0 to FItems.Count - 1 do
+  begin
+    Declaration := FItems[I];
+    if Declaration.Name = '' then
+      Continue;
+
+    if Declaration is TciProcedureDeclaration and TciProcedureDeclaration(Declaration).IsMethodOfType then
+      FGlobals.Add(TciProcedureDeclaration(Declaration).ObjectName, Declaration)
+    else
+    if Declaration is TciTypeDeclaration and (TciTypeDeclaration(Declaration).EnumType <> nil) then
+    begin
+      FGlobals.Add(Declaration.Name, Declaration);
+      for Declaration in TciTypeDeclaration(Declaration).EnumType.Elements do
+        FGlobals.Add(Declaration.Name, Declaration);
+    end
+    else
+      FGlobals.Add(Declaration.Name, Declaration);
+  end;
 end;
 
-procedure TCodeParser.Run(Script: String; AFileName: String);
+procedure TCodeParser.Assign(From: TObject);
 begin
-  FFileName := AFileName;
+  inherited Assign(From);
 
-  FStream.Position := 0;
-  FStream.Size := Length(Script);
-  FStream.Write(Script[1], Length(Script));
-
-  Run();
+  if From is TCodeParser then
+  begin
+    FOnInclude := TCodeParser(From).OnInclude;
+    FOnFindInclude := TCodeParser(From).OnFindInclude;
+    FOnFindLibrary := TCodeParser(From).OnFindLibrary;
+    FOnLoadLibrary := TCodeParser(From).OnLoadLibrary;
+  end;
 end;
 
 end.
