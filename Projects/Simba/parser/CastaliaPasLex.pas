@@ -386,7 +386,8 @@ type
   TmwPasLex = class(TmwBasePasLex)
   private
     fAheadLex: TmwBasePasLex;
-    FFileName: String;
+    fFileName: String;
+    fIsLibrary: Boolean;
     function GetAheadExID: TptTokenKind;
     function GetAheadGenID: TptTokenKind;
     function GetAheadToken: string;
@@ -417,14 +418,11 @@ type
     property AheadExID: TptTokenKind read GetAheadExID;
     property AheadGenID: TptTokenKind read GetAheadGenID;
     property Status: TmwPasLexStatus read GetStatus write SetStatus;
-    property FileName: String read FFileName write FFileName;
+    property FileName: String read fFileName write fFileName;
+    property IsLibrary: Boolean read fIsLibrary write fIsLibrary;
   end;
 
 implementation
-
-{$IFNDEF LCL}
-uses Windows;
-{$ENDIF}
 
 procedure MakeIdentTable;
 var

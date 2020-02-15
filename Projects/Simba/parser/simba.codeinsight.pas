@@ -1,7 +1,5 @@
 unit simba.codeinsight;
 
-{$modeswitch nestedprocvars}
-
 interface
 
 uses
@@ -18,7 +16,8 @@ type
     FBaseIncludes: TCodeInsight_IncludeArray;
   protected
     FPosition: Integer;
-    FIncludeParsers: TCodeInsight_IncludeArray;
+    FIncludes: TCodeInsight_IncludeArray;
+    FLocals: TDeclarationMap;
 
     procedure DoInclude(Sender: TObject; FileName: String; var Handled: Boolean);
     procedure DoLibrary(Sender: TObject; FileName: String; var Handled: Boolean);
@@ -27,11 +26,13 @@ type
 
     procedure Reset;
 
-    function GetIncludes: TCodeInsight_IncludeArray;
-    function GetGlobal(Name: String): TDeclaration;
-    function GetGlobals(Name: String): TDeclarationArray;
-    function GetLocal(Name: String): TDeclaration;
-    function GetLocals(Name: String): TDeclarationArray;
+    function GetGlobals: TDeclarationArray;
+    function GetGlobalByName(Name: String): TDeclaration;
+    function GetGlobalsByName(Name: String): TDeclarationArray;
+
+    function GetLocals: TDeclarationArray;
+    function GetLocalByName(Name: String): TDeclaration;
+    function GetLocalsByName(Name: String): TDeclarationArray;
   public
     class procedure CreateClassVariables;
     class procedure DestroyClassVariables;
@@ -53,15 +54,17 @@ type
 
     property Position: Integer read FPosition write SetPosition;
 
-    property Globals[Name: String]: TDeclarationArray read GetGlobals;
-    property Global[Name: String]: TDeclaration read GetGlobal;
+    property Globals: TDeclarationArray read GetGlobals;
+    property GlobalsByName[Name: String]: TDeclarationArray read GetGlobalsByName;
+    property GlobalByName[Name: String]: TDeclaration read GetGlobalByName;
 
-    property Locals[Name: String]: TDeclarationArray read GetLocals;
-    property Local[Name: String]: TDeclaration read GetLocal;
+    property Locals: TDeclarationArray read GetLocals;
+    property LocalsByName[Name: String]: TDeclarationArray read GetLocalsByName;
+    property LocalByName[Name: String]: TDeclaration read GetLocalByName;
 
-    property Includes: TCodeInsight_IncludeArray read GetIncludes;
+    property Includes: TCodeInsight_IncludeArray read FIncludes;
 
-    constructor Create; override;
+    constructor Create;
     destructor Destroy; override;
   end;
 
@@ -88,32 +91,24 @@ begin
   FBaseIncludes := FBaseIncludes + Include;
 end;
 
-function TCodeInsight.GetGlobals(Name: String): TDeclarationArray;
+function TCodeInsight.GetGlobalsByName(Name: String): TDeclarationArray;
 var
-  I: Int32;
+  Include: TCodeInsight_Include;
 begin
   Result := nil;
 
-  if Name = '' then
-  begin
-    for I := 0 to High(FIncludeParsers) do
-      Result := Result + FIncludeParsers[I].Globals.ExportToArrays().Items;
-    Result := Result + FGlobals.ExportToArrays().Items;
-  end else
-  begin
-    for I := 0 to High(FIncludeParsers) do
-      Result := Result + FIncludeParsers[I].Globals.ItemsOfKey(Name);
-    Result := Result + FGlobals.ItemsOfKey(Name);
-  end;
+  for Include in FBaseIncludes + FIncludes do
+    Result := Result + Include.Globals.ItemsOfKey(Name);
+  Result := Result + FGlobals.ItemsOfKey(Name);
 end;
 
-function TCodeInsight.GetGlobal(Name: String): TDeclaration;
+function TCodeInsight.GetGlobalByName(Name: String): TDeclaration;
 var
-  I: Int32;
+  Include: TCodeInsight_Include;
 begin
-  for I := 0 to High(FIncludeParsers) do
+  for Include in FBaseIncludes + FIncludes do
   begin
-    Result := FIncludeParsers[i].Globals[Name];
+    Result := Include.Globals[Name];
     if Result <> nil then
       Exit;
   end;
@@ -121,17 +116,32 @@ begin
   Result := FGlobals[Name];
 end;
 
-function TCodeInsight.GetLocal(Name: String): TDeclaration;
+function TCodeInsight.GetLocalByName(Name: String): TDeclaration;
 begin
   Result := FLocals[Name];
 end;
 
-function TCodeInsight.GetLocals(Name: String): TDeclarationArray;
+function TCodeInsight.GetLocalsByName(Name: String): TDeclarationArray;
 begin
-  if Name = '' then
-    Result := FLocals.ExportToArrays.Items
-  else
-    Result := FLocals.ItemsOfKey(Name);
+  Result := FLocals.ItemsOfKey(Name);
+end;
+
+function TCodeInsight.GetGlobals: TDeclarationArray;
+var
+  Include: TCodeInsight_Include;
+begin
+  Result := nil;
+  for Include in FBaseIncludes + FIncludes do
+    Result := Result + Include.Globals.ExportToArrays.Items;
+
+  Result := Result + FGlobals.ExportToArrays.Items;
+end;
+
+function TCodeInsight.GetLocals: TDeclarationArray;
+begin
+  Writeln('GetLocals');
+  Writeln(FLocals.Count);
+  Result := FLocals.ExportToArrays.Items;
 end;
 
 procedure TCodeInsight.DoInclude(Sender: TObject; FileName: String; var Handled: Boolean);
@@ -142,7 +152,7 @@ begin
   begin
     Include := FIncludeCache.GetInclude(Self, FileName);
     if (Include <> nil) then
-      FIncludeParsers := FIncludeParsers + Include;
+      FIncludes := FIncludes + Include;
 
     Handled := True;
   end;
@@ -156,7 +166,7 @@ begin
   begin
     Include := FIncludeCache.GetLibrary(Self, FileName);
     if (Include <> nil) then
-      FIncludeParsers := FIncludeParsers + Include;
+      FIncludes := FIncludes + Include;
   end;
 
   Handled := True;
@@ -247,21 +257,11 @@ var
 begin
   Lexer.Init();
 
-  for i := Length(FBaseIncludes) to High(FIncludeParsers) do
-    FIncludeCache.Release(FIncludeParsers[i]);
-  FIncludeParsers := FBaseIncludes;
+  for i := 0 to High(FIncludes) do
+    FIncludeCache.Release(FIncludes[i]);
 
   FGlobals.Clear();
   FLocals.Clear();
-end;
-
-function TCodeInsight.GetIncludes: TCodeInsight_IncludeArray;
-var
-  i: Int32;
-begin
-  Result := nil;
-  for i := Length(FBaseIncludes) to High(FIncludeParsers) do
-    Result := Result + FIncludeParsers[i];
 end;
 
 function TCodeInsight.GetDeclarationAtPosition(APosition: Int32): TDeclaration;
@@ -310,9 +310,9 @@ begin
 
   Base := Expressions.PopLeft();
 
-  Declaration := Local[Base.Identifier];
+  Declaration := LocalByName[Base.Identifier];
   if Declaration = nil then
-    Declaration := Global[Base.Identifier];
+    Declaration := GlobalByName[Base.Identifier];
 
   if (Declaration <> nil) then
   begin
@@ -369,7 +369,7 @@ function TCodeInsight.GetMembersOfType(Declaration: TDeclaration): TDeclarationA
   begin
     while Declaration <> nil do
     begin
-      Declarations := Globals[Declaration.Name];
+      Declarations := GlobalsByName[Declaration.Name];
       for i := 0 to High(Declarations) do
       begin
         if Declarations[i] is TciProcedureDeclaration then
@@ -379,7 +379,7 @@ function TCodeInsight.GetMembersOfType(Declaration: TDeclaration): TDeclarationA
       if Declaration.RecordType <> nil then
         GetFields(Declaration.RecordType);
 
-      Declaration := Global[Declaration.GetParent] as TciTypeDeclaration; // fix
+      Declaration := GlobalByName[Declaration.GetParent] as TciTypeDeclaration; // fix
     end;
   end;
 
@@ -390,7 +390,7 @@ begin
 
   if Declaration is TciProcedureClassName then
   begin
-    Declaration := Global[Declaration.RawText];
+    Declaration := GlobalByName[Declaration.RawText];
     if Declaration is TciTypeDeclaration then
       GetMethods(Declaration as TciTypeDeclaration);
   end else
@@ -403,7 +403,7 @@ begin
 
       if IdentifierType <> nil then
       begin
-        Declaration := Global[IdentifierType.RawText];
+        Declaration := GlobalByName[IdentifierType.RawText];
         if Declaration is TciTypeDeclaration then
           GetMethods(Declaration as TciTypeDeclaration);
       end;
@@ -436,6 +436,8 @@ var
   Expressions: TExpressionArray;
   Name: String;
   Declaration: TDeclaration;
+  Declarations: TDeclarationArray;
+  I: Int32;
 begin
   Result := nil;
 
@@ -448,7 +450,21 @@ begin
     if Declaration <> nil then
       Result := GetMembersOfType(Declaration, Name);
   end else
-    Result := Locals[Name] + Globals[Name];
+  begin
+    Declarations := GlobalsByName[Name];
+
+    // For quick lookup methods of objects are added to globals under their type name
+    // So we must remove them!
+    for I := 0 to High(Declarations) do
+    begin
+      if (Declarations[i] is TciProcedureDeclaration) and TciProcedureDeclaration(Declarations[i]).IsMethodOfType then
+        Continue;
+
+      Result := Result + Declarations[I];
+    end;
+
+    Result := Result + LocalsByName[Name];
+  end;
 end;
 
 function TCodeInsight.FindMethods(Expr: String): TDeclarationArray;
@@ -470,7 +486,7 @@ function TCodeInsight.FindMethods(Expr: String): TDeclarationArray;
 
         if NativeMethod <> nil then
         begin
-          Parent := Global[NativeMethod.Parent];
+          Parent := GlobalByName[NativeMethod.Parent];
           if Parent is TciTypeDeclaration then
             Declaration := Parent as TciTypeDeclaration;
         end;
@@ -508,7 +524,6 @@ begin
         else
           Declaration := nil;
       end;
-
       if (Declaration <> nil) then
         Result := Result + Declaration;
     end;
@@ -521,7 +536,7 @@ begin
 
   if Declaration is TciProcedureClassName then
   begin
-    Result := Global[Declaration.RawText];
+    Result := GlobalByName[Declaration.RawText];
     Exit;
   end;
   if Declaration is TciTypeDeclaration then
@@ -538,7 +553,7 @@ begin
     with Declaration as TciTypeKind do
     begin
       if IdentifierType <> nil then
-        Result := Global[IdentifierType.Name]
+        Result := GlobalByName[IdentifierType.Name]
       else
         Result := GetType;
     end;
@@ -578,6 +593,8 @@ constructor TCodeInsight.Create;
 begin
   inherited Create();
 
+  FLocals := TDeclarationMap.Create();
+
   OnInclude := @DoInclude;
   OnLibrary := @DoLibrary;
 
@@ -587,6 +604,8 @@ end;
 destructor TCodeInsight.Destroy;
 begin
   Reset();
+
+  FLocals.Free();
 
   inherited Destroy();
 end;
