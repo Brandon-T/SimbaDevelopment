@@ -236,18 +236,29 @@ end;
 
 procedure TSimbaParameterHint.CalculateBounds;
 var
+  MonitorRect: TRect;
   ScreenPoint: TPoint;
   R: TRect;
 begin
   Font := FSynEdit.Font;
 
   ScreenPoint := FSynEdit.ClientToScreen(FSynEdit.RowColumnToPixels(FSynEdit.LogicalToPhysicalPos(FStartPoint)));
+  MonitorRect := Screen.MonitorFromPoint(ScreenPoint).BoundsRect;
 
-  R := Screen.MonitorFromPoint(ScreenPoint).BoundsRect;
+  R := MonitorRect;
   R.Left := ScreenPoint.X - FBorderX;
   R.Top := ScreenPoint.Y;
 
   DrawHints(R);
+
+  if R.Left < MonitorRect.Left then
+    R.Left := MonitorRect.Left;
+  if R.Top < MonitorRect.Top then
+    R.Top := MonitorRect.Top;
+  if R.Right > MonitorRect.Right then
+    R.Right := MonitorRect.Right;
+  if R.Bottom > MonitorRect.Bottom then
+    R.Bottom := MonitorRect.Bottom;
 
   BoundsRect := Rect(R.Left, R.Top - R.Height, R.Right, R.Bottom - R.Height);
 end;

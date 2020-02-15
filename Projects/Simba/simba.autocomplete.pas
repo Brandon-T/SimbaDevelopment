@@ -188,7 +188,7 @@ var
 begin
   FDeclarations.Clear();
 
-  for Declaration in FParser.Globals[''] do
+  for Declaration in FParser.Globals do
   begin
     if Declaration.ClassType = TciProcedureDeclaration then
     begin
@@ -199,12 +199,13 @@ begin
 
     FDeclarations.Add(Declaration);
   end;
-
-  FDeclarations.Extend(FParser.Locals['']);
+  Writeln('wtf');
+  FDeclarations.Extend(FParser.Locals);
 end;
 
 procedure TSimbaAutoComplete.FillTypeDeclarations(Declaration: TDeclaration);
 begin
+  writeln('type?');
   FDeclarations.Clear();
   FDeclarations.Extend(FParser.GetMembersOfType(Declaration));
 end;

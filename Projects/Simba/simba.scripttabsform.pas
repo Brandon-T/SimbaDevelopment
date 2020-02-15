@@ -637,10 +637,8 @@ end;
 procedure TSimbaScriptTabsForm.OpenDeclaration(Declaration: TDeclaration);
 var
   FileName: String;
-  IsLibrary: Boolean;
 begin
-  //FileName := TCodeInsight(Declaration.Parser).FileName;
-  //IsLibrary := TCodeInsight(Declaration.Parser).IsLibrary;
+  FileName := Declaration.Lexer.FileName;
 
   if (FileName = '') or FileExists(FileName) then
   begin

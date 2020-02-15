@@ -44,7 +44,6 @@ type
 
   TDeclaration = class
   private
-    FParser: TmwSimplePasPar;
     FOwner: TDeclaration;
     FOrigin: PAnsiChar;
     FRawText: String;
@@ -74,7 +73,6 @@ type
     function IsVisible: Boolean; inline;
 
     property Lexer: TmwPasLex read FLexer;
-    property Parser: TmwSimplePasPar read FParser;
     property Owner: TDeclaration read FOwner write FOwner;
     property Origin: PAnsiChar read FOrigin;
 
@@ -88,7 +86,7 @@ type
     property NameHash: UInt32 read GetNameHash;
     property Line: Int32 read FLine;
 
-    constructor Create(AParser: TmwSimplePasPar; AOwner: TDeclaration; AOrigin: PAnsiChar; AStart: Integer; AEnd: Integer = -1); overload; virtual;
+    constructor Create(ALexer: TmwPasLex; AOwner: TDeclaration; AOrigin: PAnsiChar; AStart: Integer; AEnd: Integer = -1); overload; virtual;
     constructor Create(From: TDeclaration); overload; virtual;
     destructor Destroy; override;
   end;
@@ -288,7 +286,6 @@ type
     FOnLoadLibrary: TOnLoadLibrary;
     FOnLibrary: TOnLibrary;
     FGlobals: TDeclarationMap;
-    FLocals: TDeclarationMap;
     FFiles: TStringList;
 
     procedure PushLexer(ALexer: TmwPasLex);
@@ -367,6 +364,7 @@ type
   public
     property Items: TDeclarationList read FItems;
     property Globals: TDeclarationMap read FGlobals;
+    property Files: TStringList read FFiles;
 
     property OnFindInclude: TOnFindInclude read FOnFindInclude write FOnFindInclude;
     property OnInclude: TOnInclude read FOnInclude write FOnInclude;
@@ -379,7 +377,7 @@ type
 
     procedure Assign(From: TObject); override;
 
-    constructor Create; virtual;
+    constructor Create;
     destructor Destroy; override;
   end;
 
@@ -907,21 +905,21 @@ end;
 
 function TDeclaration.IsVisible: Boolean;
 begin
+  {
   if (Self.Parser.Lexer.MaxPos > -1) then
   begin
     Result := ((Self.ClassType = TciProcedureDeclaration) and (TciProcedureDeclaration(Self).IsMethodOfType)) or // Lape type method forwarding.
                (Self.EndPos < Self.Parser.Lexer.MaxPos);
   end else
-    Result := True;
+    Result := True;   }
 end;
 
-constructor TDeclaration.Create(AParser: TmwSimplePasPar; AOwner: TDeclaration; AOrigin: PAnsiChar; AStart: Integer; AEnd: Integer);
+constructor TDeclaration.Create(ALexer: TmwPasLex; AOwner: TDeclaration; AOrigin: PAnsiChar; AStart: Integer; AEnd: Integer);
 begin
   inherited Create;
 
-  FParser := AParser;
-  FLine := AParser.Lexer.LineNumber;
-  FLexer := AParser.Lexer;
+  FLexer := ALexer;
+  FLine := FLexer.LineNumber;
   FOwner := AOwner;
   FOrigin := AOrigin;
   FRawText := '';
@@ -937,7 +935,7 @@ end;
 
 constructor TDeclaration.Create(From: TDeclaration);
 begin
-  Create(From.Parser, From.Owner, From.Origin, From.StartPos, From.EndPos);
+  Create(From.Lexer, From.Owner, From.Origin, From.StartPos, From.EndPos);
 end;
 
 destructor TDeclaration.Destroy;
@@ -973,7 +971,7 @@ begin
     FHeader := FHeader + ';';
 
     for Directive in Directives do
-      FHeader := FHeader + ' ' + TokenName(Directive) + ';';
+      FHeader := FHeader + ' ' + LowerCase(TokenName(Directive)) + ';';
   end;
 
   Result := FHeader;
@@ -1080,9 +1078,9 @@ end;
 function TCodeParser.PushStack(AClass: TDeclarationClass; AStart: Integer): TDeclaration;
 begin
   if (AStart = -1) then
-    AStart := Lexer.TokenPos;
+    AStart := FLexer.TokenPos;
 
-  Result := AClass.Create(Self, FStack.Top, Lexer.Origin, AStart);
+  Result := AClass.Create(FLexer, FStack.Top, Lexer.Origin, AStart);
 
   if (FStack.Top <> nil) then
     FStack.Top.Items.Add(Result)
@@ -1097,7 +1095,7 @@ begin
   if Length(FLexerStack) > 100 then
     raise Exception.Create('Recursive include detected');
 
-  ALexer.CloneDefinesFrom(fLexer);
+  ALexer.CloneDefinesFrom(FLexer);
 
   SetLength(FLexers, Length(FLexers) + 1);
   FLexers[High(FLexers)] := ALexer;
@@ -1122,7 +1120,7 @@ end;
 
 procedure TCodeParser.PopLexer;
 begin
-  FLexerStack[High(FLexerStack)-1].CloneDefinesFrom(FLexerStack[High(FLexerStack)]);
+  FLexerStack[High(FLexerStack) - 1].CloneDefinesFrom(FLexerStack[High(FLexerStack)]);
   SetLength(FLexerStack, Length(FLexerStack) - 1);
 
   FLexer := FLexerStack[High(FLexerStack)];
@@ -1188,7 +1186,6 @@ begin
   FStack := TDeclarationStack.Create;
   FItems := TDeclarationList.Create(True);
   FGlobals := TDeclarationMap.Create();
-  FLocals := TDeclarationMap.Create();
   FFiles := TStringList.Create();
 
   PushLexer(FLexer);
@@ -1201,7 +1198,6 @@ begin
   FStack.Free();
   FItems.Free();
   FGlobals.Free();
-  FLocals.Free();
   FFiles.Free();
 
   for I := 1 to High(FLexers) do
@@ -1289,6 +1285,7 @@ begin
 
             PushLexer(TmwPasLex.Create());
 
+            FLexer.IsLibrary := True;
             FLexer.FileName := FileName;
             FLexer.Script := Contents;
 

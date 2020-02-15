@@ -99,7 +99,7 @@ var
 implementation
 
 uses
-  simba.main, simba.scripttabsform, simba.editor,
+  simba.main, simba.scripttabsform, simba.editor, simba.ci_includecache,
   lazfileutils, LCLIntf;
 
 type
@@ -437,12 +437,29 @@ begin
 end;
 
 procedure TSimbaFunctionListForm.Fill(Script: String; FileName: String);
+
+  function IncludesChanged: Boolean;
+  var
+    I: Int32;
+  begin
+    Result := False;
+
+    if FParser = nil then
+      Exit(True);
+
+    if Length(FParser.Includes) <> LEngth(FReplacementParser.Includes) then
+      Exit(True);
+    for I := 0 to High(FParser.Includes) do
+      if not FParser.Includes[i].Equals(FReplacementParser.Includes[i]) then
+        Exit(True);
+  end;
+
 var
   i: Int32;
-  Declarations: TDeclarationArray;
-  node: TTreeNode;
+  Declaration: TDeclaration;
   currentFile: String;
   currentNode: TTreeNode;
+  Include: TCodeInsight_Include;
 begin
   TThread.Synchronize(nil, @BeginUpdate);
 
@@ -455,40 +472,48 @@ begin
 
   addDeclarations(FReplacementParser.Items, FScriptNode, True, False, True);
 
-  FIncludesNode.DeleteChildren();
-  Declarations := FReplacementParser.Includes[0].Globals.ExportToArrays.Items;
-  for i := 0 to High(Declarations) do
+  if IncludesChanged then
   begin
-    if currentFile <> Declarations[i].Lexer.FileName then
-    begin
-      currentFile := Declarations[i].Lexer.FileName;
-      currentNode := addIncludeSection(currentFile);
-    end;
+    WriteLn('Includes changed!');
 
-    if (Declarations[i] is TciProcedureDeclaration) then
-      addMethod(Declarations[i] as TciProcedureDeclaration, currentNode)
-    else
-    if (Declarations[i] is TciTypeDeclaration) then
-      addType(Declarations[i] as TciTypeDeclaration, currentNode)
-    else
-    if (Declarations[i] is TciConstantDeclaration) then
-      addConst(Declarations[i] as TciConstantDeclaration, currentNode)
-    else
-    if (Declarations[i] is TciVarDeclaration) then
-      addVar(Declarations[i] as TciVarDeclaration, currentNode);
-  end;
-
-  for i := 0 to FIncludesNode.Count - 1 do
-    FIncludesNode[i].Text := ExtractFileName(FIncludesNode[i].Text);
-
-  {
-  if (FParser = nil) or (FReplacementParser.IncludesHash <> FParser.IncludesHash) then
-  begin
     FPluginsNode.DeleteChildren();
     FIncludesNode.DeleteChildren();
 
-    //addIncludes(FReplacementParser.Includes);
-  end;  }
+    currentFile := '';
+    currentNode := nil;
+
+    for Include in FReplacementParser.Includes do
+    begin
+      for i := 0 to Include.Items.Count - 1 do
+      begin
+        Declaration := Include.Items[i];
+
+        if currentFile <> Declaration.Lexer.FileName then
+        begin
+          currentFile := Declaration.Lexer.FileName;
+          if Declaration.Lexer.IsLibrary then
+            currentNode := addPluginSection(currentFile)
+          else
+            currentNode := addIncludeSection(currentFile);
+        end;
+
+        if currentNode = nil then
+          Continue;
+
+        if (Declaration is TciProcedureDeclaration) then
+          addMethod(Declaration as TciProcedureDeclaration, currentNode)
+        else
+        if (Declaration is TciTypeDeclaration) then
+          addType(Declaration as TciTypeDeclaration, currentNode)
+        else
+        if (Declaration is TciConstantDeclaration) then
+          addConst(Declaration as TciConstantDeclaration, currentNode)
+        else
+        if (Declaration is TciVarDeclaration) then
+          addVar(Declaration as TciVarDeclaration, currentNode);
+      end;
+    end;
+  end;
 
   TThread.Synchronize(nil, @EndUpdate);
 end;

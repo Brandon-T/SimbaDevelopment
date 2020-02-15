@@ -106,7 +106,7 @@ begin
     begin
       with Buttons.Add() do
       begin
-        Caption := ExtractFileName(TCodeInsight(Declarations[i].Parser).Lexer.FileName) + ' (Line ' + IntToStr(Declarations[i].Line + 1) + ')';
+        Caption := ExtractFileName(Declarations[i].Lexer.FileName) + ' (Line ' + IntToStr(Declarations[i].Line + 1) + ')';
         ModalResult := 1000 + i;
       end;
     end;

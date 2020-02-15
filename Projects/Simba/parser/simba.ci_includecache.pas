@@ -19,6 +19,8 @@ type
     RefCount: Int32;
     LastUsed: Int32;
 
+    function Equals(Obj: TObject): Boolean; override;
+
     property Outdated: Boolean read GetOutdated;
     property InDefines: TSaveDefinesRec read FInDefines write FInDefines;
     property OutDefines: TSaveDefinesRec read FOutDefines write FOutDefines;
@@ -46,6 +48,7 @@ type
   end;
 
 operator + (Left: TCodeInsight_IncludeArray; Right: TCodeInsight_Include): TCodeInsight_IncludeArray;
+operator + (Left: TCodeInsight_IncludeArray; Right: TCodeInsight_IncludeArray): TCodeInsight_IncludeArray;
 
 implementation
 
@@ -56,6 +59,19 @@ begin
     Move(Left[0], Result[0], Length(Left) * SizeOf(TCodeInsight_Include));
 
   Result[High(Result)] := Right;
+end;
+
+operator + (Left: TCodeInsight_IncludeArray; Right: TCodeInsight_IncludeArray): TCodeInsight_IncludeArray;
+begin
+  SetLength(Result, Length(Left) + Length(Right));
+
+  if Length(Result) > 0 then
+  begin
+    if Length(Left) > 0 then
+      Move(Left[0], Result[0], Length(Left) * SizeOf(TCodeInsight_IncludeArray));
+    if Length(Right) > 0 then
+      Move(Right[0], Result[Length(Left)], Length(Right) * SizeOf(TCodeInsight_IncludeArray));
+  end;
 end;
 
 function TCodeInsight_Include.GetOutdated: Boolean;
@@ -70,6 +86,29 @@ begin
       Result := True;
       Exit;
     end;
+end;
+
+function TCodeInsight_Include.Equals(Obj: TObject): Boolean;
+var
+  I: Int32;
+begin
+  Result := True;
+
+  if (TCodeInsight_Include(Obj).InDefines.Defines <> InDefines.Defines) or
+     (TCodeInsight_Include(Obj).InDefines.Stack <> InDefines.Stack) then
+    Exit(False);
+
+  if (TCodeInsight_Include(Obj).OutDefines.Defines <> OutDefines.Defines) or
+     (TCodeInsight_Include(Obj).OutDefines.Defines <> OutDefines.Defines) then
+    Exit(False);
+
+  if TCodeInsight_Include(Obj).Files.Count <> FFiles.Count then
+    Exit(False);
+
+  for I := 0 to FFiles.Count - 1 do
+    if (FFiles[I] <> TCodeInsight_Include(Obj).Files[I]) or
+       (FFiles.Objects[I] <> TCodeInsight_Include(Obj).Files.Objects[I]) then
+      Exit(False);
 end;
 
 procedure TCodeInsight_IncludeCache.Purge;
@@ -178,17 +217,21 @@ begin
     begin
       WriteLn('Caching Library "' + FileName + '"');
 
-      Sender.OnLoadLibrary(Self, FileName, Contents);
+      if (Sender.OnLoadLibrary <> nil) then
+      begin
+        Sender.OnLoadLibrary(Self, FileName, Contents);
 
-      Result := TCodeInsight_Include.Create();
-      Result.Assign(Sender);
-      Result.OnInclude := nil; // No include cache
-      Result.OnLibrary := nil; // No library cache
-      Result.Run(Contents, FileName);
-      Result.OutDefines := Result.Lexer.SaveDefines;
-      Result.InDefines := Sender.Lexer.SaveDefines;
+        Result := TCodeInsight_Include.Create();
+        Result.Assign(Sender);
+        Result.OnInclude := nil; // No include cache
+        Result.OnLibrary := nil; // No library cache
+        Result.Run(Contents, FileName);
+        Result.OutDefines := Result.Lexer.SaveDefines;
+        Result.InDefines := Sender.Lexer.SaveDefines;
+        Result.Lexer.IsLibrary := True;
 
-      FCachedIncludes.Add(FileName, Result);
+        FCachedIncludes.Add(FileName, Result);
+      end;
     end;
 
     Sender.Lexer.CloneDefinesFrom(Result.Lexer);
