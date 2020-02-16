@@ -31,7 +31,7 @@
         <CompilerOptions>
           <Version Value="11"/>
           <Target>
-            <Filename Value="../../Simba.$(TargetCPU)-$(TargetOS)"/>
+            <Filename Value="../../Simba-$(TargetCPU)-$(TargetOS)"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir);../../Units/lape;$(LazarusDir)/components/synedit;../../Units/Misc/MatchTemplate"/>

@@ -289,12 +289,12 @@ implementation
 uses
   clipbrd, lclintf, lazfileutils,  SynExportHTML, anchordocking, xmlconf, simba.mufasatypes,
   XMLPropStorage, AnchorDockStorage,
-  simba.misc, simba.pluginparser, simba.mufasabase, simba.settings,
+  simba.misc, simba.mufasabase, simba.settings,
   simba.httpclient, simba.files, simba.resourceextractor,
   simba.debugimage, simba.bitmapconv, simba.colorpicker_historyform,
   simba.aca, simba.dtmeditor,  simba.scriptinstance,
   simba.aboutform,  simba.functionlistform, simba.scripttabsform, simba.debugform, simba.filebrowserform,
-  simba.notesform, simba.settingsform, simba.splashform, simba.colorpicker, simba.ci_includecache
+  simba.notesform, simba.settingsform, simba.colorpicker, simba.ci_includecache
   {$IFDEF WINDOWS},
   windows
   {$ENDIF}
@@ -1521,9 +1521,12 @@ begin
     SimbaFunctionListForm.SimbaNode.Expanded := True;
   except
     on E: Exception do
+    begin
+      Writeln('EXCEPTION!');
       SimbaDebugForm.Add('Error parsing internals: ' + E.Message);
+    end;
   end;
-
+   Writeln('Free');
   if ScriptInstance <> nil then
     ScriptInstance.Free();
 end;
@@ -1536,15 +1539,15 @@ begin
     ShowMessage('No permission to write to Simba''s directory. This will likely cause issues.');
 
 
-
-  SimbaSplashForm.Execute('Initializing Console', @InitConsole);
-  SimbaSplashForm.Execute('Initializing Docking', @InitDocking);
-  SimbaSplashForm.Execute('Initializing OpenSSL', @InitOpenSSL);
-  SimbaSplashForm.Execute('Initializing SimbaScript', @InitSimbaScript);
-  SimbaSplashForm.Execute('Initializing OpenSSL', @InitOpenSSL);
-  SimbaSplashForm.Execute('Initializing CodeTools', @InitCodeTools);
-  SimbaSplashForm.Execute('Initializing Settings', @InitSettings);
-  SimbaSplashForm.Execute('Startup Parameters', @Startup_Parameters);
+  InitConsole;
+  InitDocking;
+  InitOpenSSL;
+  InitSimbaScript;
+  InitOpenSSL;
+  InitCodeTools;
+  InitSimbaScript;
+  InitSettings;
+  Startup_Parameters;
 
   Self.ToolBar.Images := TImageList.Create(ToolBar);
   Self.ToolBar.Images.Assign(Self.Images);
