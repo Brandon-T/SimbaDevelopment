@@ -59,7 +59,10 @@ begin
 
 uses
   {$IFDEF UNIX}
-  cthreads, cmem, simba.linux_initialization,
+  cthreads, cmem,
+  {$ENDIF}
+  {$IFDEF LINUX}
+  simba.linux_initialization,
   {$ENDIF}
   classes, interfaces, forms, sysutils,
   simba.settings, simba.main, simba.aboutform, simba.debugimage, simba.bitmapconv,
