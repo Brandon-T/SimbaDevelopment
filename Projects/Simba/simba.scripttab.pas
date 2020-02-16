@@ -165,12 +165,8 @@ end;
 procedure TSimbaScriptTab.HandleParameterHints;
 var
   BracketPos, InParameters: Int32;
-  Expression, Identifier, ScriptText: String;
-  Invoked: Boolean;
-  Declaration: TDeclaration;
+  Expression, ScriptText: String;
   Methods: TDeclarationArray;
-  i: Int32;
-  Parser: TCodeInsight;
 begin
   ScriptText := Script;
 
@@ -371,7 +367,7 @@ begin
   Result.OnFindInclude := @SimbaForm.OnCCFindInclude;
   Result.OnFindLibrary := @SimbaForm.OnCCFindLibrary;
   Result.OnLoadLibrary := @SimbaForm.OnCCLoadLibrary;
-  Result.Run(Script, Result.Lexer.FileName);
+  Result.Run(Script, Result.Lexer.FileName, FEditor.SelStart - 1);
   Result.Position := Feditor.SelStart - 1;
 end;
 

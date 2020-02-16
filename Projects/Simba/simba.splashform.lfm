@@ -1,7 +1,7 @@
 object SimbaSplashForm: TSimbaSplashForm
-  Left = 97
+  Left = 227
   Height = 65
-  Top = 558
+  Top = 323
   Width = 380
   AutoSize = True
   BorderStyle = bsNone
@@ -225,11 +225,9 @@ object SimbaSplashForm: TSimbaSplashForm
     BorderSpacing.Left = 8
     BorderSpacing.Right = 5
     Caption = 'Simba'
-    Font.Color = clBlack
-    Font.Height = 29
+    Font.Height = 30
     ParentColor = False
     ParentFont = False
-    OptimalFill = True
   end
   object VersionLabel: TLabel
     AnchorSideLeft.Control = StatusLabel

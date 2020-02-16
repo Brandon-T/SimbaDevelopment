@@ -19,24 +19,21 @@ type
 
   TDeclarationStack = class(specialize TSimbaStack<TDeclaration>)
   protected
-    function getCurItem: _T; override;
+    function getCurItem: TDeclaration; override;
   end;
 
   TDeclarationList = class(specialize TSimbaObjectList<TDeclaration>)
   public
     function GetItemsOfClass(AClass: TDeclarationClass; SubSearch: Boolean = False): TDeclarationArray;
     function GetFirstItemOfClass(AClass: TDeclarationClass; SubSearch: Boolean = False): TDeclaration;
+    function GetItemInPosition(Position: Int32): TDeclaration;
 
     function GetRawText(AClass: TDeclarationClass): String;
     function GetCleanText(AClass: TDeclarationClass): String;
     function GetShortText(AClass: TDeclarationClass): String;
   end;
 
-  TDeclarationMap = class(specialize TSimbaStringMap<TDeclaration>)
-  public
-    procedure Add(Declaration: TDeclaration); virtual; overload;
-    procedure Add(Declarations: TDeclarationArray); virtual; overload;
-  end;
+  TDeclarationMap = specialize TSimbaStringMap<TDeclaration>;
 
   TciTypeDeclaration = class;
   TciProcedureDeclaration = class;
@@ -54,7 +51,6 @@ type
     FItems: TDeclarationList;
     FName: String;
     FNameCached: Boolean;
-    FNameHash: UInt32;
     FLine: Int32;
     FLexer: TmwPasLex;
 
@@ -62,15 +58,12 @@ type
     function GetCleanText: string; virtual;
     function GetShortText: string; virtual;
     function GetName: string; virtual;
-    function GetNameHash: UInt32;
   public
     function HasOwnerClass(AClass: TDeclarationClass; out Declaration: TDeclaration; Recursive: Boolean = False): Boolean;
     function GetOwnersOfClass(AClass: TDeclarationClass): TDeclarationArray;
 
-    function Clone(Owner: TDeclaration): TDeclaration;
-    function IsName(Hash: UInt32): Boolean; inline; overload;
-    function IsName(Value: String): Boolean; inline; overload;
-    function IsVisible: Boolean; inline;
+    function Clone(AOwner: TDeclaration): TDeclaration; inline;
+    function IsName(constref Value: String): Boolean; inline;
 
     property Lexer: TmwPasLex read FLexer;
     property Owner: TDeclaration read FOwner write FOwner;
@@ -83,7 +76,6 @@ type
     property EndPos: Integer read FEndPos write FEndPos;
     property Items: TDeclarationList read FItems;
     property Name: String read GetName;
-    property NameHash: UInt32 read GetNameHash;
     property Line: Int32 read FLine;
 
     constructor Create(ALexer: TmwPasLex; AOwner: TDeclaration; AOrigin: PAnsiChar; AStart: Integer; AEnd: Integer = -1); overload; virtual;
@@ -98,8 +90,20 @@ type
     property Parent: String read GetParent;
   end;
 
-  TciTypeCopy = class(TDeclaration);
-  TciTypeAlias = class(TDeclaration);
+  TciTypeCopy = class(TDeclaration)
+  protected
+    function GetParent: String;
+  public
+    property Parent: String read GetParent;
+  end;
+
+  TciTypeAlias = class(TDeclaration)
+  protected
+    function GetParent: String;
+  public
+    property Parent: String read GetParent;
+  end;
+
   TciTypeName = class(TDeclaration);
   TciTypeIdentifer = class(TDeclaration)
   protected
@@ -119,7 +123,12 @@ type
   end;
 
   TciSetType = class(TDeclaration);
-  TciRecordType = class(TDeclaration);
+  TciRecordType = class(TDeclaration)
+  protected
+    function GetParent: String;
+  public
+    property Parent: String read GetParent;
+  end;
 
   TciArrayType = class(TDeclaration)
   public
@@ -153,19 +162,16 @@ type
   TciProcedureDeclaration = class(TDeclaration)
   private
     fObjectName: String;
-    fObjectNameCached: Boolean;
     FProcedureDirectives: EProcedureDirectives;
     FIsFunction: Boolean;
     FIsOperator: Boolean;
     FIsMethodOfType: Boolean;
     FHeader: String;
-    FObjectNameHash: UInt32;
 
     function GetHeader: String;
 
     function GetName: String; override;
     function GetObjectName: String;
-    function GetObjectNameHash: UInt32;
     function GetReturnType: TciReturnType;
   public
     function GetParamDeclarations: TDeclarationArray;
@@ -176,7 +182,6 @@ type
     property IsMethodOfType: Boolean read FIsMethodOfType write FIsMethodOfType;
     property ReturnType: TciReturnType read GetReturnType;
     property ObjectName: String read GetObjectName;
-    property ObjectNameHash: UInt32 read GetObjectNameHash;
     property Directives: EProcedureDirectives read FProcedureDirectives write FProcedureDirectives;
     property Header: String read GetHeader;
   end;
@@ -195,22 +200,20 @@ type
   TciExpression = class(TDeclaration);
 
   TciTypeDeclaration = class(TDeclaration)
-  private
+  protected
     function GetEnumType: TciEnumType;
     function GetMethodType: TciProceduralType;
     function GetNativeMethodType: TciNativeType;
     function GetRecordType: TciRecordType;
-  protected
-    FParent: String;
-    FParentCached: Boolean;
-
+    function GetAliasType: TciTypeAlias;
+    function GetCopyType: TciTypeCopy;
     function GetArrayType: TciArrayType;
     function GetName: String; override;
   public
-    function GetParent: String;
     function GetType: TDeclaration;
-    function GetFields: TDeclarationArray;
-    function GetEnumElements: TDeclarationArray;
+
+    property AliasType: TciTypeAlias read GetAliasType;
+    property CopyType: TciTypeCopy read GetCopyType;
     property NativeMethodType: TciNativeType read GetNativeMethodType;
     property MethodType: TciProceduralType read GetMethodType;
     property RecordType: TciRecordType read GetRecordType;
@@ -225,7 +228,7 @@ type
 
     function GetValue: TDeclaration;
     function GetVarType: TciTypeKind;
-    function GetName: string; override;
+    function GetName: String; override;
   public
     // For parameter hints so we can restructure.
     // var
@@ -412,22 +415,24 @@ begin
   end;
 end;
 
-function TciNativeType.GetParent: String;
+function TciTypeCopy.GetParent: String;
+begin
+  Result := FItems.GetRawText(TciTypeIdentifer);
+end;
+
+function TciTypeAlias.GetParent: String;
+begin
+  Result := FItems.GetRawText(TciTypeIdentifer);
+end;
+
+function TciRecordType.GetParent: String;
 begin
   Result := FItems.GetRawText(TciAncestorId);
 end;
 
-procedure TDeclarationMap.Add(Declaration: TDeclaration);
+function TciNativeType.GetParent: String;
 begin
-  inherited Add(Declaration.Name, Declaration);
-end;
-
-procedure TDeclarationMap.Add(Declarations: TDeclarationArray);
-var
-  i: Int32;
-begin
-  for i := 0 to High(Declarations) do
-    inherited Add(Declarations[i].Name, Declarations[i]);
+  Result := FItems.GetRawText(TciAncestorId);
 end;
 
 function TciEnumType.GetElements: TDeclarationArray;
@@ -457,7 +462,7 @@ begin
     Result := Items[0];
 end;
 
-function TDeclarationStack.getCurItem: _T;
+function TDeclarationStack.getCurItem: TDeclaration;
 begin
   if FCur >= 0 then
     Result := FArr[FCur]
@@ -543,6 +548,17 @@ begin
   Result := FName;
 end;
 
+function TciTypeDeclaration.GetAliasType: TciTypeAlias;
+var
+  Declaration: TDeclaration;
+begin
+  Result := nil;
+
+  Declaration := GetType();
+  if (Declaration <> nil) and (Declaration is TciTypeAlias) then
+    Result := TciTypeAlias(Declaration);
+end;
+
 function TciTypeDeclaration.GetEnumType: TciEnumType;
 var
   Declaration: TDeclaration;
@@ -586,6 +602,18 @@ begin
   if (Declaration <> nil) and (Declaration is TciRecordType) then
     Result := TciRecordType(Declaration);
 end;
+
+function TciTypeDeclaration.GetCopyType: TciTypeCopy;
+var
+  Declaration: TDeclaration;
+begin
+  Result := nil;
+
+  Declaration := GetType();
+  if (Declaration <> nil) and (Declaration is TciTypeCopy) then
+    Result := TciTypeCopy(Declaration);
+end;
+
 function TciTypeDeclaration.GetArrayType: TciArrayType;
 var
   Declaration: TDeclaration;
@@ -613,25 +641,6 @@ begin
   Result := FName;
 end;
 
-function TciTypeDeclaration.GetParent: String;
-begin
-  if (not FParentCached) then
-  begin
-    FParentCached := True;
-
-    if (GetType() is TciRecordType) or (GetType() is TciNativeType) then
-      FParent := GetType().Items.GetRawText(TciAncestorId)
-    else
-    if (GetType() is TciTypeCopy) or (GetType() is TciTypeAlias) then
-      FParent := GetType().Items.GetRawText(TciTypeIdentifer);
-
-    if UpperCase(FParent) = UpperCase(Self.Name) then  // type Pointer = Pointer
-      FParent := '';
-  end;
-
-  Result := FParent;
-end;
-
 function TciTypeDeclaration.GetType: TDeclaration;
 var
   Declaration: TDeclaration;
@@ -641,28 +650,6 @@ begin
   Declaration := FItems.GetFirstItemOfClass(TciTypeKind);
   if (Declaration <> nil) and (Declaration.Items.Count > 0) then
     Result := Declaration.Items[0];
-end;
-
-function TciTypeDeclaration.GetFields: TDeclarationArray;
-var
-  Declaration: TDeclaration;
-begin
-  Result := nil;
-
-  Declaration := GetType();
-  if (Declaration <> nil) and (Declaration is TciRecordType) then
-    Result := Declaration.Items.GetItemsOfClass(TciClassField);
-end;
-
-function TciTypeDeclaration.GetEnumElements: TDeclarationArray;
-var
-  Declaration: TDeclaration;
-begin
-  Result := nil;
-
-  Declaration := GetType();
-  if (Declaration <> nil) and (Declaration is TciEnumType) then
-    Result := Declaration.Items.GetItemsOfClass(TciEnumElement, True);
 end;
 
 function TDeclarationList.GetItemsOfClass(AClass: TDeclarationClass; SubSearch: Boolean = False): TDeclarationArray;
@@ -727,6 +714,40 @@ begin
   for i := 0 to FCount - 1 do
     if SearchItem(AClass, SubSearch, FItems[i], Result) then
       Exit;
+end;
+
+function TDeclarationList.GetItemInPosition(Position: Int32): TDeclaration;
+
+  function Search(Declaration: TDeclaration): TDeclaration;
+  var
+    i: Int32;
+  begin
+    Result := nil;
+
+    if (Position >= Declaration.StartPos) and (Position <= Declaration.EndPos) then
+      Result := Declaration
+    else
+    begin
+      for i := 0 to Declaration.Items.Count - 1 do
+      begin
+        Result := Search(Declaration.Items[i]);
+        if (Result <> nil) then
+          Exit;
+      end;
+    end;
+  end;
+
+var
+  i: Int32;
+begin
+  Result := nil;
+
+  for i := 0 to FCount - 1 do
+  begin
+    Result := Search(FItems[i]);
+    if (Result <> nil) then
+      Exit;
+  end;
 end;
 
 function TDeclarationList.GetRawText(AClass: TDeclarationClass): String;
@@ -875,43 +896,19 @@ begin
   IsOwner(AClass, Self, Result, l);
 end;
 
-function TDeclaration.Clone(Owner: TDeclaration): TDeclaration;
+function TDeclaration.Clone(AOwner: TDeclaration): TDeclaration;
 var
   i: Int32;
 begin
   Result := TDeclarationClass(Self.ClassType).Create(Self);
-  Result.Owner := Owner;
+  Result.Owner := AOwner;
   for i := 0 to Self.Items.Count - 1 do
     Result.Items.Add(Self.Items[i].Clone(Result));
 end;
 
-function TDeclaration.GetNameHash: UInt32;
-begin
-  if FNameHash = 0 then
-    FNameHash := HashString(UpperCase(Self.Name));
-
-  Result := FNameHash;
-end;
-
-function TDeclaration.IsName(Hash: UInt32): Boolean;
-begin
-  Result := Self.NameHash = Hash;
-end;
-
-function TDeclaration.IsName(Value: String): Boolean;
+function TDeclaration.IsName(constref Value: String): Boolean;
 begin
   Result := UpperCase(Value) = UpperCase(Self.Name);
-end;
-
-function TDeclaration.IsVisible: Boolean;
-begin
-  {
-  if (Self.Parser.Lexer.MaxPos > -1) then
-  begin
-    Result := ((Self.ClassType = TciProcedureDeclaration) and (TciProcedureDeclaration(Self).IsMethodOfType)) or // Lape type method forwarding.
-               (Self.EndPos < Self.Parser.Lexer.MaxPos);
-  end else
-    Result := True;   }
 end;
 
 constructor TDeclaration.Create(ALexer: TmwPasLex; AOwner: TDeclaration; AOrigin: PAnsiChar; AStart: Integer; AEnd: Integer);
@@ -997,24 +994,14 @@ function TciProcedureDeclaration.GetObjectName: String;
 var
   Declaration: TDeclaration;
 begin
-  if (not fObjectNameCached) then
+  if FIsMethodOfType and (fObjectName = '') then
   begin
-    fObjectNameCached := True;
-
     Declaration := FItems.GetFirstItemOfClass(TciProcedureClassName);
     if Declaration <> nil then
       fObjectName := Declaration.CleanText;
   end;
 
   Result := fObjectName;
-end;
-
-function TciProcedureDeclaration.GetObjectNameHash: UInt32;
-begin
-  if (ObjectName <> '') and (FObjectNameHash = 0) then
-    FObjectNameHash := HashString(UpperCase(ObjectName));
-
-  Result := FObjectNameHash;
 end;
 
 function TciProcedureDeclaration.GetReturnType: TciReturnType;
@@ -1201,7 +1188,7 @@ begin
   FFiles.Free();
 
   for I := 1 to High(FLexers) do
-    FLexers[i].Free();
+    FLexers[I].Free();
 
   inherited;
 end;
@@ -1520,7 +1507,7 @@ end;
 
 procedure TCodeParser.TypeAlias;
 begin
-  PushStacK(TciTypeKind);
+  PushStack(TciTypeKind);
   PushStack(TciTypeAlias);
   inherited TypeAlias;
   PopStack;
@@ -1535,10 +1522,8 @@ begin
 end;
 
 procedure TCodeParser.TypeDeclaration;
-var
-  Declaration: TDeclaration;
 begin
-  Declaration := PushStack(TciTypeDeclaration);
+  PushStack(TciTypeDeclaration);
   inherited;
   PopStack;
 end;
@@ -1546,7 +1531,10 @@ end;
 procedure TCodeParser.TypeName;
 begin
   if (not InDeclaration(TciTypeDeclaration)) then
+  begin
+    inherited;
     Exit;
+  end;
   PushStack(TciTypeName);
   inherited;
   PopStack;

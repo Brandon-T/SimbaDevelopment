@@ -199,13 +199,12 @@ begin
 
     FDeclarations.Add(Declaration);
   end;
-  Writeln('wtf');
+
   FDeclarations.Extend(FParser.Locals);
 end;
 
 procedure TSimbaAutoComplete.FillTypeDeclarations(Declaration: TDeclaration);
 begin
-  writeln('type?');
   FDeclarations.Clear();
   FDeclarations.Extend(FParser.GetMembersOfType(Declaration));
 end;

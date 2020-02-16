@@ -33,7 +33,7 @@ implementation
 
 uses
   graphtype, extctrls,
-  simba.debugimage, simba.debugform, simba.scripttabsform, simba.mufasatypes, simba.bitmap, simba.main, simba.scripttab;
+  simba.debugimage, simba.debugform, simba.scripttabsform, simba.mufasatypes, simba.main, simba.scripttab;
 
 procedure TSimbaMethod._GetPID;
 begin
