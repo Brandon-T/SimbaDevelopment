@@ -22,8 +22,6 @@ type
     procedure DoInclude(Sender: TObject; FileName: String; var Handled: Boolean);
     procedure DoLibrary(Sender: TObject; FileName: String; var Handled: Boolean);
 
-    procedure SetPosition(Value: Integer);
-
     procedure Reset;
 
     function GetGlobals: TDeclarationArray;
@@ -33,12 +31,12 @@ type
     function GetLocals: TDeclarationArray;
     function GetLocalByName(Name: String): TDeclaration;
     function GetLocalsByName(Name: String): TDeclarationArray;
+
+    procedure SetPosition(Value: Integer);
   public
     class procedure CreateClassVariables;
     class procedure DestroyClassVariables;
     class procedure AddBaseInclude(Include: TCodeInsight_Include);
-
-    function GetDeclarationAtPosition(APosition: Int32): TDeclaration;
 
     function GetMembersOfType(Declaration: TDeclaration): TDeclarationArray; overload;
     function GetMembersOfType(Declaration: TDeclaration; Name: String): TDeclarationArray; overload;
@@ -52,6 +50,7 @@ type
     function ResolveType(Declaration: TDeclaration): TDeclaration;
     function ResolveArrayType(Declaration: TDeclaration; Dimensions: Int32): TDeclaration;
 
+    property Includes: TCodeInsight_IncludeArray read FIncludes;
     property Position: Integer read FPosition write SetPosition;
 
     property Globals: TDeclarationArray read GetGlobals;
@@ -62,7 +61,7 @@ type
     property LocalsByName[Name: String]: TDeclarationArray read GetLocalsByName;
     property LocalByName[Name: String]: TDeclaration read GetLocalByName;
 
-    property Includes: TCodeInsight_IncludeArray read FIncludes;
+    procedure Run(Script: String; FileName: String; MaxPos: Int32); overload;
 
     constructor Create;
     destructor Destroy; override;
@@ -139,9 +138,8 @@ end;
 
 function TCodeInsight.GetLocals: TDeclarationArray;
 begin
-  Writeln('GetLocals');
-  Writeln(FLocals.Count);
   Result := FLocals.ExportToArrays.Items;
+  Writeln(Length(Result));
 end;
 
 procedure TCodeInsight.DoInclude(Sender: TObject; FileName: String; var Handled: Boolean);
@@ -217,7 +215,8 @@ procedure TCodeInsight.SetPosition(Value: Integer);
     begin
       Declaration := ParseExpression(Declarations[i].RawText);
       if Declaration <> nil then
-        FLocals.Add(GetMembersOfType(Declaration));
+        for Declaration in GetMembersOfType(Declaration) do
+          FLocals.Add(Declaration.Name, Declaration);
     end;
   end;
 
@@ -233,7 +232,7 @@ begin
 
   if (FPosition > -1) then
   begin
-    Declaration := GetDeclarationAtPosition(FPosition);
+    Declaration := FItems.GetItemInPosition(FPosition);
 
     if (Declaration <> nil) then
     begin
@@ -264,44 +263,9 @@ begin
   FLocals.Clear();
 end;
 
-function TCodeInsight.GetDeclarationAtPosition(APosition: Int32): TDeclaration;
-
-  function Find(Declaration: TDeclaration): TDeclaration;
-  var
-    i: Int32;
-  begin
-    Result := nil;
-
-    if (FPosition >= Declaration.StartPos) and (FPosition <= Declaration.EndPos) then
-      Result := Declaration
-    else
-    begin
-      for i := 0 to Declaration.Items.Count - 1 do
-      begin
-        Result := Find(Declaration.Items[i]);
-        if (Result <> nil) then
-          Exit;
-      end;
-    end;
-  end;
-
-var
-  i: Int32;
-begin
-  Result := nil;
-
-  for i := 0 to FItems.Count - 1 do
-  begin
-    Result := Find(FItems[i]);
-    if (Result <> nil) then
-      Exit;
-  end;
-end;
-
 function TCodeInsight.ParseExpression(Expressions: TExpressionArray): TDeclaration;
 var
-  i, j: Int32;
-  s: String;
+  i: Int32;
   Base: TExpressionItem;
   Members: TDeclarationArray;
   Declaration: TDeclaration;
@@ -364,23 +328,43 @@ function TCodeInsight.GetMembersOfType(Declaration: TDeclaration): TDeclarationA
 
   procedure GetMethods(Declaration: TciTypeDeclaration);
   var
+    Parent: TDeclaration;
     Declarations: TDeclarationArray;
-    i: Int32;
+    I, Depth: Int32;
   begin
-    while Declaration <> nil do
+    Depth := 0;
+
+    while (Declaration <> nil) and (Depth < 50) do
     begin
       Declarations := GlobalsByName[Declaration.Name];
-      for i := 0 to High(Declarations) do
-      begin
-        if Declarations[i] is TciProcedureDeclaration then
-          Result := Result + Declarations[i];
-      end;
+      for I := 0 to High(Declarations) do
+        if Declarations[I] is TciProcedureDeclaration then
+          Result := Result + Declarations[I];
 
       if Declaration.RecordType <> nil then
         GetFields(Declaration.RecordType);
 
-      Declaration := GlobalByName[Declaration.GetParent] as TciTypeDeclaration; // fix
+      Parent := nil;
+
+      if Declaration.RecordType <> nil then
+        Parent := GlobalByName[Declaration.RecordType.Parent]
+      else
+      if Declaration.CopyType <> nil then
+        Parent := GlobalByName[Declaration.CopyType.Parent]
+      else
+      if Declaration.AliasType <> nil then
+        Parent := GlobalByName[Declaration.AliasType.Parent];
+
+      if (Parent <> nil) and (Parent <> Declaration) and (Parent is TciTypeDeclaration) then
+        Declaration := Parent as TciTypeDeclaration
+      else
+        Declaration := nil;
+
+      Inc(Depth);
     end;
+
+    if Depth >= 50 then
+      WriteLn('Recursive type detected');
   end;
 
 begin
@@ -587,6 +571,13 @@ begin
   end;
 
   Result := Declaration;
+end;
+
+procedure TCodeInsight.Run(Script: String; FileName: String; MaxPos: Int32);
+begin
+  FLexer.MaxPos := MaxPos;
+
+  inherited Run(Script, FileName);
 end;
 
 constructor TCodeInsight.Create;

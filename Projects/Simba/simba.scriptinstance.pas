@@ -362,6 +362,11 @@ begin
   if (not FileExists(FProcess.Executable)) then
     raise Exception.Create('SimbaScript exectuable not found: ' + FProcess.Executable);
 
+  {$IFDEF LINUX}
+  if fpchmod(FProcess.Executable, &755) = 0 then //rwxr-xr-x
+    raise Exception.Create('Unable to make SimbaScript file exectuable');
+  {$ENDIF}
+
   TThread.ExecuteInThread(@RunMethodServer);
   TThread.ExecuteInThread(@RunStateServer);
   TThread.ExecuteInThread(@RunOutputServer);

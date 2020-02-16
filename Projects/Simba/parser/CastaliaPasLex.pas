@@ -2297,13 +2297,9 @@ begin
     end;
   end;
 
-  // if (MaxPos > -1) and (fTokenPos > MaxPos) and (not IsJunk) then
-//begin
-  //   WritelN('DONE');
-  ///    fTokenID := tok_DONE
-  // end;
+  if (MaxPos > -1) and (fTokenPos > MaxPos) and (not IsJunk) then
+    fTokenID := tok_DONE;
 end;
-
 
 function TmwBasePasLex.GetIsJunk: Boolean; inline;
 begin

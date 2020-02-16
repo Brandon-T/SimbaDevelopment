@@ -404,28 +404,6 @@ begin
     ParentNode.Expanded := True;
 end;
 
-{
-procedure TSimbaFunctionListForm.addIncludes(Includes: TCodeInsightArray);
-var
-  i: Int32;
-  Section: TTreeNode;
-begin
-  for i := 0 to High(Includes) do
-  begin
-    {
-    if Includes[i].IsLibrary then
-      Section := addPluginSection(ExtractFileNameOnly(Includes[i].FileName))
-    else
-    begin
-      Section := addIncludeSection(ExtractFileNameOnly(Includes[i].FileName));
-      Section.Data := Includes[i];
-    end;
-
-    addDeclarations(Includes[i].Items, Section, False, False, False);
-    addIncludes(Includes[i].Includes);  }
-  end;
-end;  }
-
 procedure TSimbaFunctionListForm.Reset;
 begin
   TreeEditFilter.Reset();
@@ -464,7 +442,6 @@ begin
   TThread.Synchronize(nil, @BeginUpdate);
 
   FReplacementParser := TCodeInsight.Create();
-  FReplacementParser.OnMessage := @SimbaForm.OnCCMessage;
   FReplacementParser.OnFindInclude := @SimbaForm.OnCCFindInclude;
   FReplacementParser.OnFindLibrary := @SimbaForm.OnCCFindLibrary;
   FReplacementParser.OnLoadLibrary := @SimbaForm.OnCCLoadLibrary;
@@ -474,8 +451,6 @@ begin
 
   if IncludesChanged then
   begin
-    WriteLn('Includes changed!');
-
     FPluginsNode.DeleteChildren();
     FIncludesNode.DeleteChildren();
 
