@@ -473,32 +473,39 @@ begin
   FFontPath := Application.GetOptionValue('fontpath');
   FScriptPath := Application.GetOptionValue('scriptpath');
   FIncludePath := Application.GetOptionValue('includepath');
-
-  FScriptFile := Application.GetOptionValue('scriptfile');
   FScriptName := Application.GetOptionValue('scriptname');
 
-  if (not FileExists(FScriptFile)) then
-    raise Exception.Create('Script "' + FScriptFile + '" not found');
+  if Application.HasOption('scriptfile') then
+  begin
+    FScriptFile := Application.GetOptionValue('scriptfile');
 
+    if (not FileExists(FScriptFile)) then
+      raise Exception.Create('Script "' + FScriptFile + '" not found');
 
-  try
-    with TStringList.Create() do
     try
-      LoadFromFile(Application.GetOptionValue('scriptfile'));
+      with TStringList.Create() do
+      try
+        LoadFromFile(Application.GetOptionValue('scriptfile'));
 
-      FScript := Text;
-    finally
-      if ExtractFileExt(FScriptFile) = '.tmp' then
-        DeleteFile(FScriptFile);
+        FScript := Text;
+      finally
+        if ExtractFileExt(FScriptFile) = '.tmp' then
+          DeleteFile(FScriptFile);
 
-      FScriptFile := FScriptName;
+        FScriptFile := FScriptName;
 
-      Free();
+        Free();
+      end;
+    except
+      on e: Exception do
+        raise Exception.Create('Unable to load script: ' + e.Message);
     end;
-  except
-    on e: Exception do
-      raise Exception.Create('Unable to load script: ' + e.Message);
-  end;
+  end else
+  if Application.HasOption('script') then
+  begin
+    FScript := Application.GetOptionValue('script');
+  end else
+    raise Exception.Create('No script!');
 
   FCompiler := TScriptCompiler.Create(FScript, FScriptFile);
   FCompiler.OnFindFile := @HandleFindFile;
