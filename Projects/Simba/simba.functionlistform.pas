@@ -30,6 +30,7 @@ type
     FFileName: String;
     FStamp: Int64;
     FUpdating: Boolean;
+    FCaretPos: Int32;
 
     procedure CheckUpdate;
     procedure Update(Sender: TObject);
@@ -80,7 +81,7 @@ type
     procedure addDeclarations(Declarations: TDeclarationList; ParentNode: TTreeNode; Clear, Sort, Expand: Boolean);
 
     procedure Reset;
-    procedure Fill(Script: String; FileName: String);
+    procedure Fill(Script: String; FileName: String; CaretPos: Int32);
 
     property State: TSimbaFunctionList_State read GetState write SetState;
 
@@ -143,6 +144,7 @@ begin
       FStamp := Editor.ChangeStamp;
       FScript := Editor.Text;
       FFileName := Editor.FileName;
+      FCaretPos := Editor.SelStart - 1;
     end;
   end;
 end;
@@ -151,7 +153,7 @@ procedure TSimbaFunctionList_Updater.Update(Sender: TObject);
 begin
   TThread.Synchronize(TThread.CurrentThread, @CheckUpdate);
   if FUpdating then
-    FFunctionList.Fill(FScript, FFileName);
+    FFunctionList.Fill(FScript, FFileName, FCaretPos);
 end;
 
 constructor TSimbaFunctionList_Updater.Create(FunctionList: TSimbaFunctionListForm);
@@ -414,7 +416,7 @@ begin
   FScriptNode.Expanded := True;
 end;
 
-procedure TSimbaFunctionListForm.Fill(Script: String; FileName: String);
+procedure TSimbaFunctionListForm.Fill(Script: String; FileName: String; CaretPos: Int32);
 
   function IncludesChanged: Boolean;
   var
@@ -445,6 +447,8 @@ begin
   FReplacementParser.OnFindInclude := @SimbaForm.OnCCFindInclude;
   FReplacementParser.OnFindLibrary := @SimbaForm.OnCCFindLibrary;
   FReplacementParser.OnLoadLibrary := @SimbaForm.OnCCLoadLibrary;
+  FReplacementParser.OnMessage := @SimbaForm.OnCCMessage;
+  FReplacementParser.Lexer.CaretPos := CaretPos;
   FReplacementParser.Run(Script, FileName);
 
   addDeclarations(FReplacementParser.Items, FScriptNode, True, False, True);
