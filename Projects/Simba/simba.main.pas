@@ -599,11 +599,18 @@ end;
 {$ENDIF}
 
 procedure TSimbaForm.OnCCMessage(Sender: TObject; const Typ: TMessageEventType; const Message: string; X, Y: Integer);
+var
+  Parser: TCodeParser absolute Sender;
 begin
-  if TCodeParser(Sender).Lexer.FileName <> '' then
-    WriteLn(Format('Parser: %s at line %d, column %d in file "%s"', [Message, Y, X, TCodeParser(Sender).Lexer.FileName]))
-  else
-    WriteLn(Format('Parser: %s at line %d, column %d', [Message, Y, X]))
+  if (Parser.Lexer.CaretPos = -1) or (Parser.Lexer.RunPos < Parser.Lexer.CaretPos) then
+  begin
+    SimbaDebugForm.Add('Simba''s code parser encountered an error. This could break your code tools & suggestions:');
+
+    if Parser.Lexer.FileName <> '' then
+      SimbaDebugForm.Add(Format('"%s" at line %d, column %d in file "%s"', [Message, Y, X, Parser.Lexer.FileName]))
+    else
+      SimbaDebugForm.Add(Format('"%s" at line %d, column %d', [Message, Y, X]));
+  end;
 end;
 
 function TSimbaForm.OnCCFindInclude(Sender: TObject; var FileName: string): Boolean;

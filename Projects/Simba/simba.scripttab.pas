@@ -369,8 +369,9 @@ begin
   Result.OnFindInclude := @SimbaForm.OnCCFindInclude;
   Result.OnFindLibrary := @SimbaForm.OnCCFindLibrary;
   Result.OnLoadLibrary := @SimbaForm.OnCCLoadLibrary;
-  Result.Run(Script, Result.Lexer.FileName, FEditor.SelStart - 1);
-  Result.Position := Feditor.SelStart - 1;
+  Result.Lexer.CaretPos := FEditor.SelStart - 1;
+  Result.Lexer.MaxPos := FEditor.SelStart - 1;
+  Result.Run(Script, Result.Lexer.FileName);
 end;
 
 procedure TSimbaScriptTab.MakeVisible;
