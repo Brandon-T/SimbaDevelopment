@@ -126,12 +126,6 @@ end;
 
 procedure TSimbaAutoComplete.HandleCompletion(var Value: string; SourceValue: string; var SourceStart, SourceEnd: TPoint; KeyChar: TUTF8Char; Shift: TShiftState);
 begin
-  if FParser <> nil then
-  begin
-    FParser.Free();
-    FParser := nil;
-  end;
-
   FSynEdit.TextBetweenPointsEx[SourceStart, SourceEnd, scamEnd] := Value;
   FSynEdit.CommandProcessor(ecChar, KeyChar, nil);
 

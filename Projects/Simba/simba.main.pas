@@ -799,16 +799,16 @@ begin
   try
     if (ScriptInstance = nil) then
     begin
-      if ScriptFile <> '' then
-        Save(ScriptFile);
+      if FileName <> '' then
+        Save(FileName);
 
       ScriptInstance := TSimbaScriptInstance.Create();
       ScriptInstance.ManageOutput := True;
       ScriptInstance.TargetWindow := Self.WindowSelection;
       ScriptInstance.ScriptName := ScriptName;
 
-      if (ScriptFile <> '') then
-        ScriptInstance.ScriptFile := ScriptFile
+      if (FileName <> '') then
+        ScriptInstance.ScriptFile := FileName
       else
         ScriptInstance.Script := Script;
 
@@ -827,16 +827,16 @@ begin
   try
     if (ScriptInstance = nil) then
     begin
-      if (ScriptFile <> '') then
-        Save(ScriptFile);
+      if (FileName <> '') then
+        Save(FileName);
 
       ScriptInstance := TSimbaScriptInstance.Create();
       ScriptInstance.ManageOutput := True;
       ScriptInstance.TargetWindow := Self.WindowSelection;
       ScriptInstance.ScriptName := ScriptName;
 
-      if (ScriptFile <> '') then
-        ScriptInstance.ScriptFile := ScriptFile
+      if (FileName <> '') then
+        ScriptInstance.ScriptFile := FileName
       else
         ScriptInstance.Script := Script;
 

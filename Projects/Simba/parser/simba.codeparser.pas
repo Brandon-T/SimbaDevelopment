@@ -690,6 +690,7 @@ function TDeclarationList.GetFirstItemOfClass(AClass: TDeclarationClass; SubSear
   var
     i: Integer;
   begin
+    Res := nil;
     Result := False;
     if ((Item = nil) and (AClass = nil)) or (Item is AClass) then
     begin
