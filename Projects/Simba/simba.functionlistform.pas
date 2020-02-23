@@ -100,6 +100,7 @@ var
 implementation
 
 uses
+  CastaliaPasLex,
   simba.main, simba.scripttabsform, simba.editor, simba.ci_includecache,
   lazfileutils, LCLIntf;
 
@@ -200,12 +201,11 @@ procedure TSimbaFunctionListForm.TreeViewDblClick(Sender: TObject);
 begin
   if (TreeView.Selected <> nil) and (TreeView.Selected.Data <> nil) then
   begin
-    {
-    if TObject(TreeView.Selected.Data) is TCodeInsight then
-      SimbaScriptTabsForm.Open(TCodeInsight(TreeView.Selected.Data).FileName)
+    if TObject(TreeView.Selected.Data) is TmwPasLex then
+      SimbaScriptTabsForm.Open(TmwPasLex(TreeView.Selected.Data).FileName)
     else
     if TObject(TreeView.Selected.Data) is TDeclaration then
-      SimbaScriptTabsForm.OpenDeclaration(TDeclaration(TreeView.Selected.Data)); }
+      SimbaScriptTabsForm.OpenDeclaration(TDeclaration(TreeView.Selected.Data));
   end;
 end;
 
@@ -473,7 +473,10 @@ begin
           if Declaration.Lexer.IsLibrary then
             currentNode := addPluginSection(currentFile)
           else
+          begin
             currentNode := addIncludeSection(currentFile);
+            currentNode.Data := Declaration.Lexer;
+          end;
         end;
 
         if currentNode = nil then

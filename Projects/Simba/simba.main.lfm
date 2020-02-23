@@ -4,7 +4,7 @@ object SimbaForm: TSimbaForm
   Top = 209
   Width = 443
   Caption = 'Simba'
-  ClientHeight = 276
+  ClientHeight = 256
   ClientWidth = 443
   KeyPreview = True
   Menu = MainMenu
@@ -58,7 +58,7 @@ object SimbaForm: TSimbaForm
     end
     object ButtonSeperator1: TToolButton
       Left = 166
-      Height = 5
+      Height = 32
       Top = 2
       Caption = 'ButtonSeperator1'
       Style = tbsDivider
@@ -89,7 +89,7 @@ object SimbaForm: TSimbaForm
     end
     object ButtonSeperator2: TToolButton
       Left = 373
-      Height = 5
+      Height = 32
       Top = 2
       Caption = 'ButtonSeperator2'
       Style = tbsDivider
@@ -106,7 +106,7 @@ object SimbaForm: TSimbaForm
     end
     object ButtonSeperator3: TToolButton
       Left = 129
-      Height = 5
+      Height = 32
       Top = 2
       Caption = 'ButtonSeperator3'
       Style = tbsDivider
@@ -139,7 +139,7 @@ object SimbaForm: TSimbaForm
     end
     object ButtonSeperator4: TToolButton
       Left = 336
-      Height = 5
+      Height = 32
       Top = 2
       Caption = 'ButtonSeperator4'
       Style = tbsDivider
@@ -153,7 +153,7 @@ object SimbaForm: TSimbaForm
     end
     object ButtonSeperator5: TToolButton
       Left = 267
-      Height = 5
+      Height = 32
       Top = 2
       Caption = 'ButtonSeperator5'
       Style = tbsDivider
