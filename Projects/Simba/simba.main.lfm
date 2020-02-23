@@ -1,12 +1,11 @@
 object SimbaForm: TSimbaForm
-  Left = 327
+  Left = 346
   Height = 276
-  Top = 209
+  Top = 216
   Width = 443
   Caption = 'Simba'
   ClientHeight = 256
   ClientWidth = 443
-  KeyPreview = True
   Menu = MainMenu
   OnClose = FormClose
   OnDestroy = FormDestroy
@@ -177,7 +176,6 @@ object SimbaForm: TSimbaForm
       object MenuItemNew: TMenuItem
         Caption = '&New'
         ImageIndex = 11
-        ShortCut = 16462
         OnClick = MenuNewClick
       end
       object MenuItemDivider11: TMenuItem
@@ -249,7 +247,7 @@ object SimbaForm: TSimbaForm
       object MenuItemRedo: TMenuItem
         Caption = 'Redo'
         ImageIndex = 13
-        ShortCut = 16473
+        ShortCut = 24666
         OnClick = MenuRedoClick
       end
       object MenuItemDivider3: TMenuItem

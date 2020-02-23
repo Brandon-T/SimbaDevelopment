@@ -225,6 +225,8 @@ type
     FWindowSelection: TOSWindow;
     FScriptState: TScriptButtonState;
 
+    procedure RemoveTabASync(Data: PtrInt);
+
     procedure PrintDTM(constref DTM: String);
 
     function GetScriptState: TScriptButtonState;
@@ -949,10 +951,8 @@ begin
 end;
 
 procedure TSimbaForm.MenuCloseTabClick(Sender: TObject);
-var
-  Aborted: Boolean;
 begin
-  SimbaScriptTabsForm.RemoveTab(SimbaScriptTabsForm.CurrentTab, Aborted);
+  Application.QueueAsyncCall(@RemoveTabASync, 0);
 end;
 
 procedure TSimbaForm.MenuCompileClick(Sender: TObject);
@@ -1123,6 +1123,13 @@ begin
 
   if OnResize <> nil then
     OnResize(nil);
+end;
+
+procedure TSimbaForm.RemoveTabASync(Data: PtrInt);
+var
+  Aborted: Boolean;
+begin
+  SimbaScriptTabsForm.RemoveTab(SimbaScriptTabsForm.CurrentTab, Aborted);
 end;
 
 procedure TSimbaForm.PrintDTM(constref DTM: String);
