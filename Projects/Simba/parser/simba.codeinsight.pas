@@ -14,6 +14,7 @@ type
   class var
     FIncludeCache: TCodeInsight_IncludeCache;
     FBaseIncludes: TCodeInsight_IncludeArray;
+    FBaseDefines: TStringList;
   protected
     FIncludes: TCodeInsight_IncludeArray;
     FLocals: TDeclarationMap;
@@ -68,6 +69,7 @@ implementation
 class procedure TCodeInsight.CreateClassVariables;
 begin
   FIncludeCache := TCodeInsight_IncludeCache.Create();
+  FBaseDefines := TStringList.Create();
 end;
 
 class procedure TCodeInsight.DestroyClassVariables;
@@ -79,11 +81,15 @@ begin
 
   FIncludeCache.Free();
   FIncludeCache := nil;
+
+  FBaseDefines.Free();
+  FBaseDefines := nil;
 end;
 
 class procedure TCodeInsight.AddBaseInclude(Include: TCodeInsight_Include);
 begin
   FBaseIncludes := FBaseIncludes + Include;
+  FBaseDefines.AddStrings(Include.Lexer.Defines);
 end;
 
 function TCodeInsight.GetGlobalsByName(Name: String): TDeclarationArray;
@@ -544,6 +550,9 @@ var
   Method: TDeclaration;
   i: Int32;
 begin
+  Lexer.ClearDefines();
+  Lexer.Defines.AddStrings(FBaseDefines);
+
   inherited Run();
 
   FLocals.Clear();
