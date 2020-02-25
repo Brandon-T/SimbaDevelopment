@@ -1985,7 +1985,7 @@ begin
       Continue;
 
     if Declaration is TciProcedureDeclaration and TciProcedureDeclaration(Declaration).IsMethodOfType then
-      FGlobals.Add(TciProcedureDeclaration(Declaration).ObjectName, Declaration)
+      FGlobals.Add('!' + TciProcedureDeclaration(Declaration).ObjectName, Declaration)
     else
     if Declaration is TciTypeDeclaration and (TciTypeDeclaration(Declaration).EnumType <> nil) then
     begin

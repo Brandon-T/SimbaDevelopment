@@ -257,7 +257,7 @@ function TCodeInsight.GetMembersOfType(Declaration: TDeclaration): TDeclarationA
 
     while (Declaration <> nil) and (Depth < 50) do
     begin
-      Declarations := GlobalsByName[Declaration.Name];
+      Declarations := GlobalsByName['!' + Declaration.Name];
       for I := 0 to High(Declarations) do
         if Declarations[I] is TciProcedureDeclaration then
           Result := Result + Declarations[I];
@@ -355,21 +355,7 @@ begin
     if Declaration <> nil then
       Result := GetMembersOfType(Declaration, Name);
   end else
-  begin
-    Declarations := GlobalsByName[Name];
-
-    // For quick lookup methods of objects are added to globals under their type name
-    // So we must remove them!
-    for I := 0 to High(Declarations) do
-    begin
-      if (Declarations[i] is TciProcedureDeclaration) and TciProcedureDeclaration(Declarations[i]).IsMethodOfType then
-        Continue;
-
-      Result := Result + Declarations[I];
-    end;
-
-    Result := Result + LocalsByName[Name];
-  end;
+    Result := LocalsByName[Name] + GlobalsByName[Name];
 end;
 
 function TCodeInsight.FindMethods(Expr: String): TDeclarationArray;
