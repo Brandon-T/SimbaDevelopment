@@ -34,7 +34,7 @@ jobs:
             ARTIFACT: "Simba-x86_64-linux"
             
           - os: macos-latest
-            name: Linux 64
+            name: macOS 64
             LAZ_VER: 2.0.6
             LAZ_OPT: "--os=darwin --cpu=x86_64 --widgetset=cocoa"
             ARTIFACT: "Simba-x86_64-darwin"
