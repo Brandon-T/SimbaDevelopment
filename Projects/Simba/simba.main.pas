@@ -1435,6 +1435,7 @@ end;
 procedure TSimbaForm.Initialize(Data: PtrInt);
 var
   I: Int32;
+  Site: TSimbaAnchorDockHostSite;
 begin
   WriteLn('Initializing...');
 
@@ -1460,9 +1461,12 @@ begin
   for I := 0 to Screen.CustomFormCount - 1 do
     if (Screen.CustomForms[I] is TSimbaAnchorDockHostSite) then
     begin
-      if (TSimbaAnchorDockHostSite(Screen.CustomForms[I]).MenuItem = nil) or
-         (TSimbaAnchorDockHostSite(Screen.CustomForms[I]).MenuItem.Checked) then
-        Screen.CustomForms[I].Visible := True;
+      Site := Screen.CustomForms[I] as TSimbaAnchorDockHostSite;
+
+      if DockMaster.ShowHeader then
+        Screen.CustomForms[I].Visible := (Screen.CustomForms[I].ControlCount > 1) and ((Site.MenuItem = nil) or Site.MenuItem.Checked)
+      else
+        Screen.CustomForms[I].Visible := (Screen.CustomForms[I].ControlCount > 0) and ((Site.MenuItem = nil) or Site.MenuItem.Checked);
     end;
 
   Self.Visible := True;
@@ -1703,7 +1707,6 @@ begin
   Result := False;
 
   Stream := TStringStream.Create(SimbaSettings.GUI.Layout.Value);
-
   if Stream.Size > 0 then
   try
     Position := poDesigned;
