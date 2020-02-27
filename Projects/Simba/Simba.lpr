@@ -113,6 +113,7 @@ begin
   end;
 
   Application.Title := 'Simba';
+  Application.Scaled := True;
   Application.ShowMainForm := False;
   Application.Initialize();
 
