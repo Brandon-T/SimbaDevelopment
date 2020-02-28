@@ -1199,6 +1199,8 @@ end;
 
 procedure TCodeParser.ParseFile;
 begin
+  Lexer.Next;
+
   SkipJunk;
   case GenID of
     tokLibrary:
