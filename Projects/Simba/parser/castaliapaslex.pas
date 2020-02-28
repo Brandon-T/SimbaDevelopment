@@ -116,8 +116,9 @@ type
     FDefineStack: Integer;
     FTopDefineRec: PDefineRec;
     FUseDefines: Boolean;
+    FUseCodeToolsIDEDirective: Boolean;
 
-	  function KeyHash: Integer;
+    function KeyHash: Integer;
     function KeyComp(const aKey: string): Boolean;
     function Func9: tptTokenKind;
     function Func15: TptTokenKind;
@@ -379,6 +380,7 @@ type
 	  property AsmCode : Boolean read fAsmCode write fAsmCode; // DR 2002-01-14
     property DirectiveParamOrigin: PAnsiChar read FDirectiveParamOrigin;
 
+    property UseCodeToolsIDEDirective: Boolean read FUseCodeToolsIDEDirective write FUseCodeToolsIDEDirective;
     property UseDefines: Boolean read FUseDefines write FUseDefines;
 
     property Defines: TStrings read FDefines;
@@ -1615,10 +1617,14 @@ begin
   case fTokenID of
     tokIDECodeTools:
       begin
-        if DirectiveParamOriginal = 'off' then
-          EnterDefineBlock(False)
-        else
-          ExitDefineBlock();
+        if FUseCodeToolsIDEDirective then
+        begin
+          if DirectiveParamOriginal = 'off' then
+            EnterDefineBlock(False)
+          else
+          if DirectiveParamOriginal = 'on' then
+            ExitDefineBlock();
+        end;
 
         Next();
       end;
