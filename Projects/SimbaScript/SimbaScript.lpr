@@ -73,9 +73,6 @@ end;
 
 procedure TApplicationHelper.Terminate(Sender: TObject);
 begin
-  if (Script <> nil) then
-    Script.Free();
-
   inherited Terminate();
 
   if (WakeMainThread <> nil) then
@@ -143,5 +140,8 @@ begin
       WriteLn(StringOfChar('-', 80));
     end;
   end;
+
+  if (Script <> nil) then
+    Script.Free();
 end.
 
