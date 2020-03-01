@@ -227,12 +227,15 @@ begin
 
     if (FStateServer <> nil) then
       FStateThread := TThread.ExecuteInThread(@HandleStateReading);
+
+    if (FMethodServer <> nil) then
+      FMethodLock := TCriticalSection.Create();
   except
     on E: Exception do
     begin
       ExitCode := SCRIPT_EXIT_CODE_INITIALIZE;
-
       HandleException(E);
+      Exit;
     end;
   end;
 
@@ -242,8 +245,8 @@ begin
     on E: Exception do
     begin
       ExitCode := SCRIPT_EXIT_CODE_IMPORT;
-
       HandleException(E);
+      Exit;
     end;
   end;
 
@@ -264,8 +267,8 @@ begin
     on E: Exception do
     begin
       ExitCode := SCRIPT_EXIT_CODE_COMPILE;
-
       HandleException(E);
+      Exit;
     end;
   end;
 
@@ -486,6 +489,9 @@ end;
 
 destructor TSimbaScript.Destroy;
 begin
+  if (FMethodLock <> nil) then
+    FMethodLock.Free();
+
   if (FPlugins <> nil) then
     FPlugins.Free();
   if (FCompiler <> nil) then
