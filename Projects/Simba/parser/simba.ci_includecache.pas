@@ -262,6 +262,7 @@ begin
         Sender.OnLoadLibrary(Self, FileName, Contents);
 
         Result := TCodeInsight_Include.Create();
+        Result.Assign(Sender);
         Result.Run(Contents, FileName);
         Result.OutDefines := Result.Lexer.SaveDefines;
         Result.InDefines := Sender.Lexer.SaveDefines;
