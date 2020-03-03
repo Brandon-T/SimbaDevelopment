@@ -515,7 +515,7 @@ begin
   inherited Destroy();
 end;
 
-{$IF Declared(DARWIN) and Declared(DynamicFFI)}
+{$IF DEFINED(DARWIN) and DECLARED(LoadFFI)} { DynamicFFI }
 initialization
   if not FFILoaded then
     LoadFFI('/usr/local/opt/libffi/lib/');

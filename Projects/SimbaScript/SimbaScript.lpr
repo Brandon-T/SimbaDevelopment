@@ -2,9 +2,16 @@ program SimbaScript;
 
 {$mode objfpc}{$H+}
 
+{$IFDEF DARWIN}
+  {$modeswitch objectivec2}
+{$ENDIF}
+
 uses
   {$IFDEF UNIX}
   cthreads, cmem,
+  {$ENDIF}
+  {$IFDEF DARWIN}
+  cocoaint,
   {$ENDIF}
   sysutils, classes, interfaces, forms,
   simbascript.script, simba.script_common, simba.ipc;
@@ -21,7 +28,7 @@ type
 procedure TApplicationHelper.Execute(Data: PtrInt);
 begin
   Script := TSimbaScript.Create(True);
-  Script.OnTerminate := @Terminate;
+  Script.OnTerminate := @Self.Terminate;
   Script.CompileOnly := Application.HasOption('compile');
   Script.Dump := Application.HasOption('dump');
 
@@ -85,6 +92,10 @@ end;
 procedure TApplicationHelper.Terminate(Sender: TObject);
 begin
   inherited Terminate();
+
+  {$IFDEF DARWIN}
+  CocoaWidgetSet.NSApp.Terminate(nil); // Lazarus doesn't exit the message loop
+  {$ENDIF}
 
   if (WakeMainThread <> nil) then
     WakeMainThread(nil);
