@@ -303,8 +303,7 @@ uses
   {$ENDIF}
   {$IFDEF USE_FORMDESIGNER},
   simba.formdesigner
-  {$ENDIF},
-  dynlibs;
+  {$ENDIF};
 
 type
   TSimbaAnchorDockHeader = class(TAnchorDockHeader)
@@ -541,7 +540,7 @@ procedure TSimbaForm.CodeTools_OnMessage(Sender: TObject; const Typ: TMessageEve
 var
   Parser: TCodeParser absolute Sender;
 begin
-  if (Parser.Lexer.TokenPos < Parser.Lexer.CaretPos) then
+  if (Parser.Lexer.TokenPos + Parser.Lexer.TokenLen < Parser.Lexer.CaretPos) then
   begin
     SimbaDebugForm.Add('Simba''s code parser encountered an error. This could break code tools:');
 
@@ -559,7 +558,7 @@ end;
 
 function TSimbaForm.CodeTools_OnFindLibrary(Sender: TObject; var FileName: String): Boolean;
 begin
-  Result := FindPlugin(FileName, [ExtractFileDir(TCodeParser(Sender).Lexer.FileName), SimbaSettings.Environment.PluginPath.Value, Application.Location]);
+  Result := TSimbaScriptPluginLoader.FindFile(FileName, [ExtractFileDir(TCodeParser(Sender).Lexer.FileName), SimbaSettings.Environment.PluginPath.Value, Application.Location]);
 end;
 
 procedure TSimbaForm.CodeTools_OnLoadLibrary(Sender: TObject; FileName: String; var Contents: String);

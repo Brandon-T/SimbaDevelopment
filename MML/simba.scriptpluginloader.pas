@@ -5,7 +5,7 @@ unit simba.scriptpluginloader;
 interface
 
 uses
-  Classes, SysUtils, dynlibs;
+  classes, sysutils, dynlibs;
 
 type
   TSynchronizeMethod = procedure(Data: Pointer); cdecl;
@@ -69,8 +69,6 @@ type
     SetPluginSimbaMemoryAllocators: TSetPluginSimbaMemoryAllocators;
     OnAttach: TOnAttach;
     OnDetach: TOnDetach;
-
-    property Handle: TLibHandle read FHandle;
 
     property Types: TSimbaScriptPluginLoader_Types read FTypes;
     property Methods: TSimbaScriptPluginLoader_Methods read FMethods;
@@ -210,13 +208,13 @@ constructor TSimbaScriptPluginLoader.Create(FileName: String);
 var
   Index: Int32;
 begin
-  WriteLn('LoadLibrary: ', FileName);
+  WriteLn('Loading Plugin: ', FileName);
 
   FFileName := FileName;
   FHandle := LoadLibrary(FFileName);
 
   if (FHandle = 0) then
-    raise Exception.Create('Loading library failed. Architecture mismatch? Expected a ' + {$IFDEF CPU32}'32'{$ELSE}'64'{$ENDIF} + ' bit plugin');
+    raise Exception.Create('Loading plugin failed. Architecture mismatch? (expected a ' + {$IFDEF CPU32}'32'{$ELSE}'64'{$ENDIF} + ' bit plugin)');
 
   Pointer(GetPluginABIVersion) := GetProcedureAddress(FHandle, 'GetPluginABIVersion');
   Pointer(GetFunctionInfo) := GetProcedureAddress(FHandle, 'GetFunctionInfo');
@@ -253,7 +251,7 @@ destructor TSimbaScriptPluginLoader.Destroy;
 begin
   if (FHandle > 0) then
   begin
-    WriteLn('FreeLibrary: ' + FFileName);
+    WriteLn('Free Plugin: ' + FFileName);
 
     FreeLibrary(FHandle);
   end;

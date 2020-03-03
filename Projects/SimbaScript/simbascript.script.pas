@@ -109,7 +109,7 @@ var
 implementation
 
 uses
-  fileutil, simba.misc, simba.files, fpexprpars, typinfo,
+  fileutil, simba.misc, simba.files, fpexprpars, typinfo, ffi,
 
   // Base types
   simbascript.import_types,
@@ -403,7 +403,7 @@ begin
 
         'IFHASLIB':
           begin
-            if FindPlugin(Argument, [ExtractFileDir(Sender.Tokenizer.FileName), FPluginPath, FAppPath]) then
+            if TSimbaScriptPlugin.FindFile(Argument, [ExtractFileDir(Sender.Tokenizer.FileName), FPluginPath, FAppPath]) then
               FCompiler.pushConditional((not InIgnore) and True, Sender.DocPos)
             else
               FCompiler.pushConditional((not InIgnore) and False, Sender.DocPos);
@@ -511,7 +511,7 @@ begin
   inherited Destroy();
 end;
 
-{$IFDEF DARWIN}
+{$IF Declared(DARWIN) and Declared(DynamicFFI)}
 initialization
   if not FFILoaded then
     LoadFFI('/usr/local/opt/libffi/lib/');
