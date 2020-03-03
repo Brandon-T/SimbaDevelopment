@@ -213,6 +213,8 @@ var
   T: Double;
   Method: TLapeGlobalVar;
 begin
+  ExitCode := SCRIPT_EXIT_CODE_SUCCESS;
+
   try
     FCompiler := TScriptCompiler.Create(TLapeTokenizerString.Create(FScript, FScriptFile));
     FCompiler.OnFindFile := @HandleFindFile;
@@ -275,6 +277,8 @@ begin
     Exit;
 
   try
+    T := PerformanceTimer();
+
     FStartTime := GetTickCount64();
     FState := bTrue;
 

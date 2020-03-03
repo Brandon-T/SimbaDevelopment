@@ -118,14 +118,14 @@ begin
           ''
         );
 
-        Halt;
+        Exit;
       end;
 
       if (not FileExists(Application.Params[Application.ParamCount])) then
       begin
         WriteLn('Script not found: ', Application.Params[Application.ParamCount]);
 
-        Halt;
+        Exit;
       end;
     end;
 
