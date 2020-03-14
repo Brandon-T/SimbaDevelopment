@@ -263,8 +263,6 @@ begin
 
     FDeclarations.Add(Declaration);
   end;
-
-  FDeclarations.Extend(FParser.GetMembersOfType(Declaration));
 end;
 
 function TSimbaAutoComplete.GetCompletionFormClass: TSynBaseCompletionFormClass;
