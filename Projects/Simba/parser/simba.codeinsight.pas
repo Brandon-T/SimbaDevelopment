@@ -276,6 +276,12 @@ function TCodeInsight.GetMembersOfType(Declaration: TDeclaration): TDeclarationA
     Result := Result + Declaration.Items.GetItemsOfClass(TciClassField);
   end;
 
+  procedure GetEnumElements(Declaration: TciTypeDeclaration);
+  begin
+    if Declaration.EnumType <> nil then
+      Result := Result + Declaration.EnumType.Elements;
+  end;
+
   procedure GetMethods(Declaration: TciTypeDeclaration);
   var
     Parent: TDeclaration;
@@ -344,8 +350,10 @@ begin
     end;
   end else
   if Declaration is TciTypeDeclaration then
-    GetMethods(Declaration as TciTypeDeclaration)
-  else
+  begin
+    GetMethods(Declaration as TciTypeDeclaration);
+    GetEnumElements(Declaration as TciTypeDeclaration);
+  end else
   if Declaration is TciRecordType then
     GetFields(Declaration as TciRecordType)
   else
