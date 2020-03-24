@@ -33,6 +33,7 @@ type
     MenuItem3: TMenuItem;
     EditorPopupDelete: TMenuItem;
     MenuItem6: TMenuItem;
+    OpenDialog: TOpenDialog;
     StatusPanelState: TPanel;
     StatusPanelFileName: TPanel;
     StatusPanelCaret: TPanel;
@@ -104,8 +105,6 @@ type
     procedure Open; overload;
 
     procedure OpenDeclaration(Declaration: TDeclaration);
-
-    procedure SaveAll;
 
     constructor Create(TheOwner: TComponent); override;
   end;
@@ -628,22 +627,19 @@ end;
 
 procedure TSimbaScriptTabsForm.Open;
 var
-  i: Int32;
+  I: Int32;
 begin
-  with TOpenDialog.Create(nil) do
   try
-    InitialDir := ExtractFileDir(CurrentTab.FileName);
-    if InitialDir = '' then
-      InitialDir := SimbaSettings.Environment.ScriptPath.Value;
+    OpenDialog.InitialDir := ExtractFileDir(CurrentTab.FileName);
+    if OpenDialog.InitialDir = '' then
+      OpenDialog.InitialDir := SimbaSettings.Environment.ScriptPath.Value;
 
-    Options := [ofAllowMultiSelect, ofExtensionDifferent, ofPathMustExist, ofFileMustExist, ofEnableSizing, ofViewDetail];
-    Filter := 'Simba Files|*.simba;*.txt;*.pas';
-
-    if Execute then
-      for i := 0 to Files.Count - 1 do
-        Open(Files[i], True);
-  finally
-    Free();
+    if OpenDialog.Execute() then
+      for I := 0 to OpenDialog.Files.Count - 1 do
+        Open(OpenDialog.Files[I], True);
+  except
+    on E: Exception do
+      ShowMessage('Exception while opening file: ' + E.Message);
   end;
 end;
 
@@ -681,14 +677,6 @@ begin
     else
       SimbaDebugForm.Add(Declaration.RawText);
   end;
-end;
-
-procedure TSimbaScriptTabsForm.SaveAll;
-var
-  i: Int32;
-begin
-  for i := TabCount - 1 downto 0 do
-    Tabs[i].Save(Tabs[i].FileName);
 end;
 
 constructor TSimbaScriptTabsForm.Create(TheOwner: TComponent);
