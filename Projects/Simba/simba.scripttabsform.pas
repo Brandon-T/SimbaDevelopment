@@ -530,39 +530,26 @@ procedure TSimbaScriptTabsForm.RemoveTab(ScriptTab: TSimbaScriptTab; out Abort: 
 begin
   Abort := False;
 
-  if ScriptTab.ScriptInstance <> nil then
+  if (ScriptTab.ScriptInstance <> nil) then
   begin
     ScriptTab.MakeVisible();
 
     Application.MainForm.Enabled := False;
 
     try
-      {
-      case ScriptTab.ScriptInstance.State of
-        SCRIPT_RUNNING:
-          case MessageDlg('Script is still running', 'Do you want to stop the script?', mtConfirmation, [mbYes, mbNo, mbAbort], 0) of
-            mrYes: ScriptTab.ScriptInstance.Stop();
-            mrNo: Exit;
-            mrAbort:
-              begin
-                Abort := True;
+      if ScriptTab.ScriptInstance.IsRunning then
+      begin
+        case MessageDlg('Script is still running', 'Do you want to forcefully stop the script?', mtConfirmation, [mbYes, mbNo, mbAbort], 0) of
+          mrYes: ScriptTab.ScriptInstance.Kill();
+          mrNo: Exit;
+          mrAbort:
+            begin
+              Abort := True;
 
-                Exit;
-              end;
-          end;
-
-        SCRIPT_STOPPING:
-          case MessageDlg('Script is stopping', 'Do you want to forcefully stop the script?', mtConfirmation, [mbYes, mbNo, mbAbort], 0) of
-            mrYes: ScriptTab.ScriptInstance.Kill();
-            mrNo: Exit;
-            mrAbort:
-              begin
-                Abort := True;
-
-                Exit;
-              end;
-          end;
-      end;   }
+              Exit;
+            end;
+        end;
+      end;
     finally
       Application.MainForm.Enabled := True;
     end;
@@ -584,7 +571,7 @@ begin
     end;
   end;
 
-  if TabCount = 1 then
+  if (TabCount = 1) then
     ScriptTab.Reset()
   else
     ScriptTab.Free();
