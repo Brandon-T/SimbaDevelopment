@@ -29,9 +29,6 @@ type
   protected
     FLock: TCriticalSection;
     FStrings: TStringList;
-
-    procedure SettingChanged_EditorFont(Value: String);
-    procedure SettingChanged_EditorFontHeight(Value: Int64);
   public
     procedure Clear;
 
@@ -134,17 +131,6 @@ begin
   Editor.CopyToClipboard();
 end;
 
-procedure TSimbaDebugForm.SettingChanged_EditorFont(Value: String);
-begin
-  if Value <> '' then
-    Editor.Font.Name := Value;
-end;
-
-procedure TSimbaDebugForm.SettingChanged_EditorFontHeight(Value: Int64);
-begin
-  Editor.Font.Height := Value;
-end;
-
 procedure TSimbaDebugForm.Clear;
 begin
   Editor.Lines.Clear();
@@ -163,9 +149,6 @@ begin
   {$ELSE}
   Editor.Font.Quality := fqDefault; // weird one, I know
   {$ENDIF}
-
-  SimbaSettings.Editor.FontName.AddHandlerOnChange(@SettingChanged_EditorFont);
-  SimbaSettings.Editor.FontHeight.AddHandlerOnChange(@SettingChanged_EditorFontHeight);
 end;
 
 destructor TSimbaDebugForm.Destroy;
