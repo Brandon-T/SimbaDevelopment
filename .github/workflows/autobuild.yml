@@ -40,12 +40,9 @@ jobs:
             ARTIFACT: "Simba-Darwin64"
 
     steps:
-    - uses: actions/checkout@v1
-
-    - name: Install Modules
-      run: |
-        git submodule init
-        git submodule update
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
 
     - name: Install Dependencies
       if: env.OS == 'ubuntu-latest'
