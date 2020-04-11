@@ -48,10 +48,6 @@
             </CompilerMessages>
             <CustomOptions Value="-dLape_CDECL
 -dStaticFFI"/>
-            <OtherDefines Count="2">
-              <Define0 Value="Lape_CDECL"/>
-              <Define1 Value="StaticFFI"/>
-            </OtherDefines>
             <ExecuteAfter>
               <Command Value="$MakeExe($(LazarusDir)lazbuild) --build-mode=$(BuildMode) ..\SimbaResources\MakeSimbaResources.lpi"/>
               <ShowAllMessages Value="True"/>
@@ -175,9 +171,16 @@
       <Version Value="2"/>
     </PublishOptions>
     <RunParams>
+      <local>
+        <CommandLineParams Value="--compile test"/>
+      </local>
       <FormatVersion Value="2"/>
       <Modes Count="1">
-        <Mode0 Name="default"/>
+        <Mode0 Name="default">
+          <local>
+            <CommandLineParams Value="--compile test"/>
+          </local>
+        </Mode0>
       </Modes>
     </RunParams>
     <RequiredPackages Count="2">
@@ -188,7 +191,7 @@
         <PackageName Value="LCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="8">
+    <Units Count="10">
       <Unit0>
         <Filename Value="SimbaScript.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -221,6 +224,14 @@
         <Filename Value="simbascript.plugin.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit7>
+      <Unit8>
+        <Filename Value="simbascript.dumper.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="simbascript.compilerdump.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit9>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -251,10 +262,6 @@
       </CompilerMessages>
       <CustomOptions Value="-dLape_CDECL
 -dStaticFFI"/>
-      <OtherDefines Count="2">
-        <Define0 Value="Lape_CDECL"/>
-        <Define1 Value="StaticFFI"/>
-      </OtherDefines>
       <ExecuteAfter>
         <Command Value="$MakeExe($(LazarusDir)lazbuild) --build-mode=$(BuildMode) ..\SimbaResources\MakeSimbaResources.lpi"/>
         <ShowAllMessages Value="True"/>
