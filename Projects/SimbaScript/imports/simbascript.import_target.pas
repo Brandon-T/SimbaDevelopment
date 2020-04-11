@@ -11,7 +11,7 @@ procedure Lape_Import_Target(Compiler: TSimbaScript_Compiler; Data: Pointer = ni
 implementation
 
 uses
-  simba.iomanager, simba.bitmap, simba.target, simba.target_exported;
+  simba.iomanager, simba.bitmap, simba.target, simba.target_exported, simba.oswindow;
 
 procedure Lape_GetProcessID(const Params : PParamArray; const Result : Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
@@ -154,6 +154,16 @@ begin
   end;
 end;
 
+procedure Lape_GetTargetWindow(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
+begin
+  POSWindow(Result)^ := TSimbaScript(Params^[0]).Client.IOManager.GetImageTarget().Handle;
+end;
+
+procedure Lape_GetTargetPID(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
+begin
+  PUInt32(Result)^ := TOSWindow(TSimbaScript(Params^[0]).Client.IOManager.GetImageTarget().Handle).GetPID();
+end;
+
 procedure Lape_Import_Target(Compiler: TSimbaScript_Compiler; Data: Pointer = nil);
 begin
   with Compiler do
@@ -185,6 +195,8 @@ begin
     addGlobalMethod('function IsTargetValid: Boolean', @Lape_IsTargetValid, Data);
     addGlobalMethod('function GetNativeWindow: PtrUInt;', @Lape_GetNativeWindow, Data);
     addGlobalMethod('procedure SaveScreenshot(FileName: string);', @Lape_SaveScreenshot, Data);
+    addGlobalMethod('function GetTargetWindow: TOSWindow;', @Lape_GetTargetWindow, Data);
+    addGlobalMethod('function GetTargetPID: UInt32;', @Lape_GetTargetPID, Data);
   end;
 end;
 

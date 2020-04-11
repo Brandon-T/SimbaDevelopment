@@ -267,6 +267,7 @@ begin
     @Lape_Import_SimbaImageBox,
 
     @Lape_Import_System,
+    @Lape_Import_OSWindow,
     @Lape_Import_Target,
     @Lape_Import_Input,
     @Lape_Import_Finder,
@@ -284,7 +285,6 @@ begin
     @Lape_Import_Other,
     @Lape_Import_Crypto,
     @Lape_Import_Deprecated,
-    @Lape_Import_OSWindow,
     @Lape_Import_Dialogs,
     @Lape_Import_Simba,
     @Lape_Import_Process

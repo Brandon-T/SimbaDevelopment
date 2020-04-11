@@ -136,6 +136,9 @@ begin
   try
     while True do
     begin
+      Method.Params.Clear();
+      Method.Result.Clear();
+
       if not FServer.ReadMessage(Message, Method.Params) then
         Break;
 
@@ -151,6 +154,8 @@ begin
         SIMBA_METHOD_BALLOON_HINT:        TThread.Synchronize(nil, @Method._ShowBalloonHint);
         SIMBA_METHOD_DISGUISE:            TThread.Synchronize(nil, @Method._Disguise);
         SIMBA_METHOD_STATUS:              TThread.Synchronize(nil, @Method._Status);
+        SIMBA_METHOD_GET_TARGET_PID:      TThread.Synchronize(nil, @Method._GetSimbaTargetPID);
+        SIMBA_METHOD_GET_TARGET_WINDOW:   TThread.Synchronize(nil, @Method._GetSimbaTargetWindow)
         else
           raise Exception.CreateFmt('Invalid method %d', [Method.Method]);
       end;
