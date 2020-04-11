@@ -107,7 +107,6 @@ type
     // Start
     procedure Run;
     procedure Compile;
-    procedure Dump;
 
     // Change the state
     procedure Resume;
@@ -122,9 +121,6 @@ type
 implementation
 
 uses
-  {$IFDEF UNIX}
-  baseunix,
-  {$ENDIF}
   forms, dialogs,
   simba.script_simbamethod, simba.debugform, simba.settings;
 
@@ -393,16 +389,6 @@ begin
   FStartTime := GetTickCount64();
 end;
 
-procedure TSimbaScriptInstance.Dump;
-begin
-  FProcess.Parameters.Add('--dump');
-  FProcess.Execute();
-  while FProcess.Running do
-    Application.ProcessMessages();
-
-  FStartTime := GetTickCount64();
-end;
-
 procedure TSimbaScriptInstance.Resume;
 var
   Message: Int32 = Ord(SCRIPT_RUNNING);
@@ -450,11 +436,6 @@ begin
   FProcess.Executable := SimbaSettings.Environment.ScriptExecutablePath.Value;
   if (not FileExists(FProcess.Executable)) then
     raise Exception.Create('SimbaScript executable not found: ' + FProcess.Executable);
-
-  {$IFDEF UNIX}
-  if fpchmod(FProcess.Executable, &755) <> 0 then //rwxr-xr-x
-    raise Exception.Create('Unable to make SimbaScript executable');
-  {$ENDIF}
 
   FMethodThread := TSimbaScriptMethodThread.Create(Self, FMethodServer);
   FStateThread := TSimbaScriptStateThread.Create(Self, FStateServer);
