@@ -11,8 +11,7 @@ procedure Lape_Import_Simba(Compiler: TSimbaScript_Compiler; Data: Pointer = nil
 implementation
 
 uses
-  extctrls, simba.bitmap, simba.script_common;
-
+  extctrls, simba.bitmap, simba.script_common, simba.oswindow;
 
 procedure Lape_Status(const Params: PParamArray); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 var
@@ -164,6 +163,26 @@ begin
   Method.Free();
 end;
 
+procedure Lape_GetSimbaTargetPID(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
+var
+  Method: TSimbaMethod;
+begin
+  Method := TSimbaMethod.Create(SIMBA_METHOD_GET_TARGET_PID);
+  Method.Invoke(TSimbaScript(Params^[0]));
+  Method.Result.Read(PUInt32(Result)^, SizeOf(UInt32));
+  Method.Free();
+end;
+
+procedure Lape_GetSimbaTargetWindow(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
+var
+  Method: TSimbaMethod;
+begin
+  Method := TSimbaMethod.Create(SIMBA_METHOD_GET_TARGET_WINDOW);
+  Method.Invoke(TSimbaScript(Params^[0]));
+  Method.Result.Read(POSWindow(Result)^, SizeOf(TOSWindow));
+  Method.Free();
+end;
+
 procedure Lape_Import_Simba(Compiler: TSimbaScript_Compiler; Data: Pointer = nil);
 begin
   with Compiler do
@@ -183,6 +202,8 @@ begin
     addGlobalMethod('function GetDebugBitmap: Int32;', @Lape_GetDebugBitmap, Data);
     addGlobalMethod('procedure ClearDebugImg;', @Lape_ClearDebugImg, Data);
     addGlobalMethod('function GetSimbaPID: PtrUInt;', @Lape_GetSimbaPID, Data);
+    addGlobalMethod('function GetSimbaTargetPID: UInt32;', @Lape_GetSimbaTargetPID, Data);
+    addGlobalMethod('function GetSimbaTargetWindow: TOSWindow;', @Lape_GetSimbaTargetWindow, Data);
   end;
 end;
 

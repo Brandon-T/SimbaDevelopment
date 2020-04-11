@@ -242,6 +242,7 @@ type
     procedure SettingChanged_TrayIconVisible(Value: Boolean);
   protected
     FWindowSelection: TOSWindow;
+    FProcessSelection: UInt32;
     FScriptState: TScriptButtonState;
 
     procedure RemoveTabASync(Data: PtrInt);
@@ -259,6 +260,7 @@ type
     Initialized: Boolean;
 
     property WindowSelection: TOSWindow read FWindowSelection;
+    property ProcessSelection: UInt32 read FProcessSelection;
 
     procedure RunScript;
     procedure CompileScript;
@@ -1533,6 +1535,7 @@ begin
         SimbaDebugForm.Add(' - ClassName: ' + Selected.GetClassName());
 
       FWindowSelection := Selected;
+      FProcessSelection := Selected.GetPID();
     finally
       Free();
     end;

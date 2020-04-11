@@ -15,102 +15,102 @@ uses
 
 procedure Lape_OSWindow_Activate(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PBoolean(Result)^ := POSWindow(Params^[1])^.Activate();
+  PBoolean(Result)^ := POSWindow(Params^[0])^.Activate();
 end;
 
 procedure Lape_OSWindow_IsVaild(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PBoolean(Result)^ := POSWindow(Params^[1])^.IsValid();
+  PBoolean(Result)^ := POSWindow(Params^[0])^.IsValid();
 end;
 
 procedure Lape_OSWindow_IsActive(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PBoolean(Result)^ := POSWindow(Params^[1])^.IsActive();
+  PBoolean(Result)^ := POSWindow(Params^[0])^.IsActive();
 end;
 
 procedure Lape_OSWindow_IsActiveEx(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PBoolean(Result)^ := POSWindow(Params^[1])^.IsActive(PInt32(Params^[2])^);
+  PBoolean(Result)^ := POSWindow(Params^[0])^.IsActive(PInt32(Params^[1])^);
 end;
 
 procedure Lape_OSWindow_IsVisible(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PBoolean(Result)^ := POSWindow(Params^[1])^.IsVisible();
+  PBoolean(Result)^ := POSWindow(Params^[0])^.IsVisible();
 end;
 
 procedure Lape_OSWindow_GetPID(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PUInt32(Result)^ := POSWindow(Params^[1])^.GetPID();
+  PUInt32(Result)^ := POSWindow(Params^[0])^.GetPID();
 end;
 
 procedure Lape_OSWindow_GetRootWindow(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  POSWindow(Result)^ := POSWindow(Params^[1])^.GetRootWindow();
+  POSWindow(Result)^ := POSWindow(Params^[0])^.GetRootWindow();
 end;
 
 procedure Lape_OSWindow_GetTitle(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PWideString(Result)^ := POSWindow(Params^[1])^.GetTitle();
+  PWideString(Result)^ := POSWindow(Params^[0])^.GetTitle();
 end;
 
 procedure Lape_OSWindow_GetClassName(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PWideString(Result)^ := POSWindow(Params^[1])^.GetClassName();
+  PWideString(Result)^ := POSWindow(Params^[0])^.GetClassName();
 end;
 
 procedure Lape_OSWindow_GetBounds(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PBox(Result)^ := POSWindow(Params^[1])^.GetBounds();
+  PBox(Result)^ := POSWindow(Params^[0])^.GetBounds();
 end;
 
 procedure Lape_OSWindow_GetChildren(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  POSWindowArray(Result)^ := POSWindow(Params^[1])^.GetChildren(PBoolean(Params^[2])^);
+  POSWindowArray(Result)^ := POSWindow(Params^[0])^.GetChildren(PBoolean(Params^[1])^);
 end;
 
 procedure Lape_OSWindow_SetBounds(const Params: PParamArray); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  POSWindow(Params^[1])^.SetBounds(PBox(Params^[2])^);
+  POSWindow(Params^[0])^.SetBounds(PBox(Params^[1])^);
 end;
 
 procedure Lape_OSWindow_Kill(const Params: PParamArray); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  POSWindow(Params^[1])^.Kill();
+  POSWindow(Params^[0])^.Kill();
 end;
 
 procedure Lape_OSWindowArray_GetByTitle(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PBoolean(Result)^ := POSWindowArray(Params^[1])^.GetByTitle(PString(Params^[2])^, POSWindow(Params^[3])^);
+  PBoolean(Result)^ := POSWindowArray(Params^[0])^.GetByTitle(PString(Params^[1])^, POSWindow(Params^[2])^);
 end;
 
 procedure Lape_OSWindowArray_GetByTitleEx(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  POSWindowArray(Result)^ := POSWindowArray(Params^[1])^.GetByTitle(PString(Params^[2])^);
+  POSWindowArray(Result)^ := POSWindowArray(Params^[0])^.GetByTitle(PString(Params^[1])^);
 end;
 
 procedure Lape_OSWindowArray_GetByClass(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PBoolean(Result)^ := POSWindowArray(Params^[1])^.GetByClass(PString(Params^[2])^, POSWindow(Params^[3])^);
+  PBoolean(Result)^ := POSWindowArray(Params^[0])^.GetByClass(PString(Params^[1])^, POSWindow(Params^[2])^);
 end;
 
 procedure Lape_OSWindowArray_GetByClassEx(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  POSWindowArray(Result)^ := POSWindowArray(Params^[1])^.GetByClass(PString(Params^[2])^);
+  POSWindowArray(Result)^ := POSWindowArray(Params^[0])^.GetByClass(PString(Params^[1])^);
 end;
 
 procedure Lape_OSWindowArray_GetByTitleAndClass(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PBoolean(Result)^ := POSWindowArray(Params^[1])^.GetByTitleAndClass(PString(Params^[2])^, PString(Params^[3])^, POSWindow(Params^[4])^);
+  PBoolean(Result)^ := POSWindowArray(Params^[0])^.GetByTitleAndClass(PString(Params^[1])^, PString(Params^[2])^, POSWindow(Params^[3])^);
 end;
 
 procedure Lape_OSWindowArray_GetByTitleAndClassEx(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  POSWindowArray(Result)^ := POSWindowArray(Params^[1])^.GetByTitleAndClass(PString(Params^[2])^, PString(Params^[3])^);
+  POSWindowArray(Result)^ := POSWindowArray(Params^[0])^.GetByTitleAndClass(PString(Params^[1])^, PString(Params^[2])^);
 end;
 
 procedure Lape_OSWindowArray_ToString(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
 begin
-  PString(Result)^ := POSWindowArray(Params^[1])^.ToString();
+  PString(Result)^ := POSWindowArray(Params^[0])^.ToString();
 end;
 
 procedure Lape_GetTopWindows(const Params: PParamArray; const Result: Pointer); {$IFDEF Lape_CDECL}cdecl;{$ENDIF}
@@ -167,30 +167,30 @@ begin
     addGlobalType('type PtrUInt', 'TOSWindow');
     addGlobalType('array of TOSWindow', 'TOSWindowArray');
 
-    addGlobalMethod('function TOSWindow.Activate: Boolean; constref;', @Lape_OSWindow_Activate, Data);
-    addGlobalMethod('function TOSWindow.IsVaild: Boolean; constref;', @Lape_OSWindow_IsVaild, Data);
-    addGlobalMethod('function TOSWindow.IsActive: Boolean; constref; overload;', @Lape_OSWindow_IsActive, Data);
-    addGlobalMethod('function TOSWindow.IsActive(Time: Int32): Boolean; constref; overload;', @Lape_OSWindow_IsActiveEx, Data);
-    addGlobalMethod('function TOSWindow.IsVisible: Boolean; constref;', @Lape_OSWindow_IsVisible, Data);
-    addGlobalMethod('function TOSWindow.GetPID: UInt32; constref;', @Lape_OSWindow_GetPID, Data);
-    addGlobalMethod('function TOSWindow.GetRootWindow: TOSWindow; constref; ', @Lape_OSWindow_GetRootWindow, Data);
-    addGlobalMethod('function TOSWindow.GetClassName: WideString; constref;', @Lape_OSWindow_GetClassName, Data);
-    addGlobalMethod('function TOSWindow.GetTitle: WideString; constref;', @Lape_OSWindow_GetTitle, Data);
-    addGlobalMethod('function TOSWindow.GetBounds: TBox; constref;', @Lape_OSWindow_GetBounds, Data);
-    addGlobalMethod('function TOSWindow.GetChildren(Recursive: Boolean = True): TOSWindowArray; constref;', @Lape_OSWindow_GetChildren, Data);
-    addGlobalMethod('procedure TOSWindow.SetBounds(Bounds: TBox); constref;', @Lape_OSWindow_SetBounds, Data);
-    addGlobalMethod('procedure TOSWindow.Kill; constref;', @Lape_OSWindow_Kill, Data);
+    addGlobalFunc('function TOSWindow.Activate: Boolean; constref;', @Lape_OSWindow_Activate);
+    addGlobalFunc('function TOSWindow.IsVaild: Boolean; constref;', @Lape_OSWindow_IsVaild);
+    addGlobalFunc('function TOSWindow.IsActive: Boolean; constref; overload;', @Lape_OSWindow_IsActive);
+    addGlobalFunc('function TOSWindow.IsActive(Time: Int32): Boolean; constref; overload;', @Lape_OSWindow_IsActiveEx);
+    addGlobalFunc('function TOSWindow.IsVisible: Boolean; constref;', @Lape_OSWindow_IsVisible);
+    addGlobalFunc('function TOSWindow.GetPID: UInt32; constref;', @Lape_OSWindow_GetPID);
+    addGlobalFunc('function TOSWindow.GetRootWindow: TOSWindow; constref; ', @Lape_OSWindow_GetRootWindow);
+    addGlobalFunc('function TOSWindow.GetClassName: WideString; constref;', @Lape_OSWindow_GetClassName);
+    addGlobalFunc('function TOSWindow.GetTitle: WideString; constref;', @Lape_OSWindow_GetTitle);
+    addGlobalFunc('function TOSWindow.GetBounds: TBox; constref;', @Lape_OSWindow_GetBounds);
+    addGlobalFunc('function TOSWindow.GetChildren(Recursive: Boolean = True): TOSWindowArray; constref;', @Lape_OSWindow_GetChildren);
+    addGlobalFunc('procedure TOSWindow.SetBounds(Bounds: TBox); constref;', @Lape_OSWindow_SetBounds);
+    addGlobalFunc('procedure TOSWindow.Kill; constref;', @Lape_OSWindow_Kill);
 
-    addGlobalMethod('function TOSWindowArray.GetByTitle(Title: String; out Window: TOSWindow): Boolean; constref; overload;', @Lape_OSWindowArray_GetByTitle, Data);
-    addGlobalMethod('function TOSWindowArray.GetByTitle(Title: String): TOSWindowArray; constref; overload;', @Lape_OSWindowArray_GetByTitleEx, Data);
+    addGlobalFunc('function TOSWindowArray.GetByTitle(Title: String; out Window: TOSWindow): Boolean; constref; overload;', @Lape_OSWindowArray_GetByTitle);
+    addGlobalFunc('function TOSWindowArray.GetByTitle(Title: String): TOSWindowArray; constref; overload;', @Lape_OSWindowArray_GetByTitleEx);
 
-    addGlobalMethod('function TOSWindowArray.GetByClass(ClassName: String; out Window: TOSWindow): Boolean; constref; overload;', @Lape_OSWindowArray_GetByClass, Data);
-    addGlobalMethod('function TOSWindowArray.GetByClass(ClassName: String): TOSWindowArray; constref; overload;', @Lape_OSWindowArray_GetByClassEx, Data);
+    addGlobalFunc('function TOSWindowArray.GetByClass(ClassName: String; out Window: TOSWindow): Boolean; constref; overload;', @Lape_OSWindowArray_GetByClass);
+    addGlobalFunc('function TOSWindowArray.GetByClass(ClassName: String): TOSWindowArray; constref; overload;', @Lape_OSWindowArray_GetByClassEx);
 
-    addGlobalMethod('function TOSWindowArray.GetByTitleAndClass(Title, ClassName: String; out Window: TOSWindow): Boolean; overload;', @Lape_OSWindowArray_GetByTitleAndClass, Data);
-    addGlobalMethod('function TOSWindowArray.GetByTitleAndClass(Title, ClassName: String): TOSWindowArray; overload;', @Lape_OSWindowArray_GetByTitleAndClassEx, Data);
+    addGlobalFunc('function TOSWindowArray.GetByTitleAndClass(Title, ClassName: String; out Window: TOSWindow): Boolean; overload;', @Lape_OSWindowArray_GetByTitleAndClass);
+    addGlobalFunc('function TOSWindowArray.GetByTitleAndClass(Title, ClassName: String): TOSWindowArray; overload;', @Lape_OSWindowArray_GetByTitleAndClassEx);
 
-    addGlobalMethod('function TOSWindowArray.ToString: String; constref;', @Lape_OSWindowArray_ToString, Data);
+    addGlobalFunc('function TOSWindowArray.ToString: String; constref;', @Lape_OSWindowArray_ToString);
 
     addGlobalMethod('function GetTopWindows: TOSWindowArray', @Lape_GetTopWindows, Data);
     addGlobalMethod('function GetVisibleWindows: TOSWindowArray;', @Lape_GetVisibleWindows, Data);
