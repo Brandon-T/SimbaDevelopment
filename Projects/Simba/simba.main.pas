@@ -622,7 +622,6 @@ begin
         Save(FileName);
 
       ScriptInstance := TSimbaScriptInstance.Create();
-      ScriptInstance.ManageOutput := True;
       ScriptInstance.Target := Self.WindowSelection;
       ScriptInstance.ScriptName := ScriptName;
 
@@ -650,7 +649,6 @@ begin
         Save(FileName);
 
       ScriptInstance := TSimbaScriptInstance.Create();
-      ScriptInstance.ManageOutput := True;
       ScriptInstance.Target := Self.WindowSelection;
       ScriptInstance.ScriptName := ScriptName;
 
