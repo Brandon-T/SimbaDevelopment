@@ -355,15 +355,7 @@ end;
 
 procedure TSimbaScript.WriteLn(constref S: String);
 begin
-  if (S = '') then
-    FOutputBuffer := FOutputBuffer + ' ';
-  if (S <> '') then
-    FOutputBuffer := FOutputBuffer + S;
-
-  if FSimbaOutputServer <> nil then
-    FSimbaOutputServer.Write(FOutputBuffer[1], Length(FOutputBuffer) + 1) // Include null termination. This is how lines are detected simba sided.
-  else
-    System.WriteLn(FOutputBuffer);
+  System.WriteLn(FOutputBuffer + S);
 
   FOutputBuffer := '';
 end;
