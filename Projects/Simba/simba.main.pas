@@ -576,7 +576,7 @@ begin
     if (Status <> 0) then
       raise Exception.Create(IntToStr(Status));
 
-    Contents := Between(#0, #0, Output);
+    Contents := Output;
   except
     on E: Exception do
     begin
@@ -1251,8 +1251,8 @@ begin
       raise Exception.Create(IntToStr(Status));
 
     Dump := TStringList.Create();
-    Dump.LineBreak := '!';
-    Dump.Text := Between(#0, #0, Output);
+    Dump.LineBreak := #0;
+    Dump.Text := Output;
 
     for I := 0 to Dump.Count - 1 do
     begin
