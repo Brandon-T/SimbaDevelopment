@@ -1,13 +1,4 @@
-*.bak
-*.ppu
-*.o
-*.compiled
-*.or
-*.s
-^Doc\/sphinx\/\_build
 *.res
-*.pyc
-*.log
 *.trc
 *.exe
 *.x86_64-linux
@@ -15,9 +6,6 @@
 backup/
 build/
 lib/
-/Projects/SimbaResources/OpenSSL.zip
-/Projects/SimbaResources/SimbaScript.zip
-/Projects/SimbaScript/SimbaScript
 /SimbaScript
 /ssleay32.dll
 /libeay32.dll
