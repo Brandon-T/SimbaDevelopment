@@ -1353,22 +1353,23 @@ end;
 
 procedure TSimbaForm.Initialize_CommandLineOptions;
 begin
-  if (Application.ParamCount = 2) then
+  if (Application.ParamCount > 0) then
   begin
     WriteLn('Initialize Command Line Options');
 
-    if not FileExists(Application.Params[2]) then
+    if (Application.ParamCount = 1) and FileExists(Application.Params[1]) then
+      SimbaScriptTabsForm.Open(Application.Params[1])
+    else
+    if (Application.ParamCount = 2) and FileExists(Application.Params[2]) and
+       (Application.HasOption('compile') or Application.HasOption('run')) then
     begin
-      WriteLn('Script does not exist!');
-      Halt(0);
+      SimbaScriptTabsForm.Open(Application.Params[2]);
+
+      if Application.HasOption('compile') then
+        Self.CompileScript();
+      if Application.HasOption('run') then
+        Self.RunScript();
     end;
-
-    SimbaScriptTabsForm.Open(Application.Params[2]);
-
-    if Application.HasOption('c', 'compile') then
-      Self.CompileScript();
-    if Application.HasOption('r', 'run') then
-      Self.RunScript();
   end;
 end;
 
