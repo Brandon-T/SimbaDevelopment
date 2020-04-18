@@ -607,7 +607,9 @@ begin
   else
   if FileExists(FileName) then
   begin
-    CurrentTab := AddTab();
+    if (CurrentTab.FileName <> '') or CurrentTab.ScriptChanged then
+      CurrentTab := AddTab();
+
     CurrentTab.Load(FileName);
 
     SimbaForm.AddRecentFile(FileName);
