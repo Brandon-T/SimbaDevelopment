@@ -33,11 +33,11 @@ jobs:
             LAZ_OPT: "--build-mode=SIMBA_LINUX64"
             ARTIFACT: "Simba-Linux64"
             
-          - os: macos-latest
-            name: MacOS 64
-            LAZ_VER: 2.0.8
-            LAZ_OPT: "--build-mode=SIMBA_DARWIN64"
-            ARTIFACT: "Simba-Darwin64"
+          #- os: macos-latest
+          #  name: MacOS 64
+          #  LAZ_VER: 2.0.8
+          #  LAZ_OPT: "--build-mode=SIMBA_DARWIN64"
+          #  ARTIFACT: "Simba-Darwin64"
 
     steps:
     - uses: actions/checkout@v2
@@ -118,9 +118,8 @@ jobs:
 
             return install_lazarus_version(os.environ.get('LAZ_VER'))
 
-        main()
-        subprocess.call('cat /var/log/install.log', shell=True)
-        sys.exit(1)
+        sys.exit(int(not main()))
+
 
     - name: Build Simba
       run: lazbuild ${{ env.LAZ_OPT }} "Projects/Simba/Simba.lpi"
