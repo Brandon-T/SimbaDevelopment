@@ -21,10 +21,14 @@ uses
 
 {$R *.res}
 
+var
+  Task: TThread;
+
 type
   TApplicationHelper = class helper for TApplication
   public
     procedure Terminate(Sender: TObject);
+
     procedure RunScript(Data: PtrInt);
     procedure DumpPlugin(Data: PtrInt);
     procedure DumpCompiler(Data: PtrInt);
@@ -32,7 +36,9 @@ type
 
 procedure TApplicationHelper.RunScript(Data: PtrInt);
 begin
-  with TSimbaScript.Create(True) do
+  Task := TSimbaScript.Create(True);
+
+  with TSimbaScript(Task) do
   begin
     OnTerminate := @Self.Terminate;
 
@@ -90,8 +96,6 @@ end;
 
 procedure TApplicationHelper.Terminate(Sender: TObject);
 begin
-  TThread(Sender).Free();
-
   if Sender is TThread then
     with Sender as TThread do
     begin
@@ -116,7 +120,9 @@ end;
 
 procedure TApplicationHelper.DumpPlugin(Data: PtrInt);
 begin
-  with TSimbaScript_PluginDumper.Create(True) do
+  Task := TSimbaScript_PluginDumper.Create(True);
+
+  with TSimbaScript_PluginDumper(Task) do
   begin
     OnTerminate := @Self.Terminate;
 
@@ -129,7 +135,9 @@ end;
 
 procedure TApplicationHelper.DumpCompiler(Data: PtrInt);
 begin
-  with TSimbaScript_CompilerDumper.Create(True) do
+  Task := TSimbaScript_CompilerDumper.Create(True);
+
+  with TSimbaScript_CompilerDumper(Task) do
   begin
     OnTerminate := @Self.Terminate;
 
@@ -196,6 +204,9 @@ begin
     end;
 
     Application.Run();
+
+    if (Task <> nil) then
+      Task.Free();
   except
     on E: Exception do
     begin
