@@ -224,5 +224,7 @@ begin
       WriteLn(StringOfChar('-', 80));
     end;
   end;
+
+  Flush(Output);
 end.
 
