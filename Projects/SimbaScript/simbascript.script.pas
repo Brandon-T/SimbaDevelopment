@@ -490,6 +490,7 @@ end;
 procedure TSimbaScript.WriteLn(constref S: String);
 begin
   System.WriteLn(FWriteBuffer + S);
+  System.Flush(Output);
 
   FWriteBuffer := '';
 end;
