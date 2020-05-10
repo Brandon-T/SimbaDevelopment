@@ -491,6 +491,9 @@ begin
     '|': Result := VK_OEM_5;
     '}': Result := VK_OEM_6;
     '~': Result := VK_OEM_3;
+    Char($8): Result := VK_BACK;
+    Char($9): Result := VK_TAB;
+    Char($A): Result := VK_RETURN;
   else
     Raise Exception.CreateFMT('GetKeyCode - char (%s) is not in A..z',[Character]);
   end
