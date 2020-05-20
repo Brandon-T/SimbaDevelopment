@@ -29,3 +29,11 @@ lib/
 /Data/
 /Fonts/
 ppas.bat
+/Simba-x86_64-darwin
+/Simba-x86_64-darwin.app
+/Simba-x86_64-darwin.dSYM
+/Simba-x86_64-linux
+.DS_Store
+/Projects/SimbaResources/MakeSimbaResources
+/libssl.dylib
+/libcrypto.dylib
