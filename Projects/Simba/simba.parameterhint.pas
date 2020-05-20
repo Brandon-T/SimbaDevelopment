@@ -37,7 +37,7 @@ type
     property Parser: TCodeInsight read FParser write SetParser;
 
     procedure CalculateBounds;
-    procedure Show(StartPoint, BracketPoint: TPoint; Declarations: TDeclarationArray; Invoked: Boolean);
+    procedure Execute(BracketPoint: TPoint; Methods: TDeclarationArray);
 
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -408,155 +408,24 @@ begin
   DrawHints(R);
 end;
 
-procedure TSimbaParameterHint.Show(StartPoint, BracketPoint: TPoint; Declarations: TDeclarationArray; Invoked: Boolean);
+procedure TSimbaParameterHint.Execute(BracketPoint: TPoint; Methods: TDeclarationArray);
 var
   i: Int32;
 begin
   LastParameterIndex := -1;
 
-  SetLength(FDeclarations, 0);
-  SetLength(FParameters, 0);
-
-
-  for i := 0 to High(Declarations) do
+  if Length(Methods) > 0 then
   begin
+    SetLength(FDeclarations, Length(Methods));
+    SetLength(FParameters, Length(Methods));
 
-    {
-
-    if Declarations[i] is TciProcedureDeclaration then
+    for i := 0 to High(Methods) do
     begin
-      if Invoked then
-      begin
-        Declarations[i] := TciProcedureDeclaration(Declarations[i]).ReturnType;
-        if Declarations[i] = nil then
-          Continue;
-      end;
+      FDeclarations[i] := TciProcedureDeclaration(Methods[i]);
+      FParameters[i] := TciProcedureDeclaration(Methods[i]).GetParamDeclarations();
     end;
 
-    if Declarations[i] is TciVarDeclaration then
-    begin
-      Declarations[i] := TciVarDeclaration(Declarations[i]).VarType;
-      if (Declarations[i] = nil) then
-        Continue;
-    end;
-
-    if Declarations[i] is TciTypeKind then
-    begin
-      if Declarations[i].Items.GetFirstItemOfClass(TciTypeIdentifer) <> nil then
-        Declarations[i] := Declarations[i].Items.GetFirstItemOfClass(TciTypeIdentifer)
-      else
-      if Declarations[i].Items.GetFirstItemOfClass(TciProceduralType) <> nil then
-        Declarations[i] := Declarations[i].Items.GetFirstItemOfClass(TciProceduralType);
-
-      if (Declarations[i] = nil) then
-        Continue;
-    end;
-
-    if Declarations[i] is TciTypeIdentifer then
-    begin
-      Declarations[i] := Parser.getGlobalType(Declarations[i].CleanText);
-      if Declarations[i] = nil then
-        Continue;
-    end;
-
-    if Declarations[i] is TciTypeDeclaration then
-    begin
-      // TFoo = native(TFoo);
-      with Declarations[i] as TciTypeDeclaration do
-      begin
-        if GetType() is TciNativeType then
-        begin
-          Declarations[i] := FParser.getGlobalType(GetParent());
-          if Declarations[i] = nil then
-            Continue;
-        end;
-      end;
-
-      // TFoo = procedure(abc: Int32);
-      with Declarations[i] as TciTypeDeclaration do
-         Declarations[i] := GetType();
-    end;
-     }
-    if Declarations[i] is TciProcedureDeclaration then
-    begin
-      SetLength(FDeclarations, Length(FDeclarations) + 1);
-      SetLength(FParameters, Length(FParameters) + 1);
-
-      FDeclarations[High(FDeclarations)] := Declarations[i] as TciProcedureDeclaration;
-      FParameters[High(FParameters)] := FDeclarations[High(FDeclarations)].GetParamDeclarations();
-    end;
-  end;
-
-  {
-  for i := 0 to High(Declarations) do
-  begin
-    if Declarations[i] is TciProcedureDeclaration then
-    begin
-      if Invoked then
-      begin
-        Declarations[i] := TciProcedureDeclaration(Declarations[i]).ReturnType;
-        if Declarations[i] = nil then
-          Continue;
-      end;
-    end;
-
-    if Declarations[i] is TciVarDeclaration then
-    begin
-      Declarations[i] := TciVarDeclaration(Declarations[i]).VarType;
-      if (Declarations[i] = nil) then
-        Continue;
-    end;
-
-    if Declarations[i] is TciTypeKind then
-    begin
-      if Declarations[i].Items.GetFirstItemOfClass(TciTypeIdentifer) <> nil then
-        Declarations[i] := Declarations[i].Items.GetFirstItemOfClass(TciTypeIdentifer)
-      else
-      if Declarations[i].Items.GetFirstItemOfClass(TciProceduralType) <> nil then
-        Declarations[i] := Declarations[i].Items.GetFirstItemOfClass(TciProceduralType);
-
-      if (Declarations[i] = nil) then
-        Continue;
-    end;
-
-    if Declarations[i] is TciTypeIdentifer then
-    begin
-      Declarations[i] := Parser.getGlobalType(Declarations[i].CleanText);
-      if Declarations[i] = nil then
-        Continue;
-    end;
-
-    if Declarations[i] is TciTypeDeclaration then
-    begin
-      // TFoo = native(TFoo);
-      with Declarations[i] as TciTypeDeclaration do
-      begin
-        if GetType() is TciNativeType then
-        begin
-          Declarations[i] := FParser.getGlobalType(GetParent());
-          if Declarations[i] = nil then
-            Continue;
-        end;
-      end;
-
-      // TFoo = procedure(abc: Int32);
-      with Declarations[i] as TciTypeDeclaration do
-         Declarations[i] := GetType();
-    end;
-
-    if Declarations[i] is TciProcedureDeclaration then
-    begin
-      SetLength(FDeclarations, Length(FDeclarations) + 1);
-      SetLength(FParameters, Length(FParameters) + 1);
-
-      FDeclarations[High(FDeclarations)] := Declarations[i] as TciProcedureDeclaration;
-      FParameters[High(FParameters)] := FDeclarations[High(FDeclarations)].GetParamDeclarations();
-    end;
-  end;   }
-
-  if Length(FDeclarations) > 0 then
-  begin
-    FStartPoint := StartPoint;
+    FStartPoint := Point(BracketPoint.X - Length(Methods[0].Name), BracketPoint.Y);
     FBracketPoint := BracketPoint;
 
     CalculateBounds();

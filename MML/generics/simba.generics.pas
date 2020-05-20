@@ -160,6 +160,7 @@ type
     procedure setSorted(Sort: Boolean); virtual;
   public
     constructor Create(InvalidValue: _T; Duplicates: TDuplicates; Sort: Boolean; InvalidKey: String = ''; ACaseSensitive: Boolean = False); reintroduce; virtual;
+    constructor Create; reintroduce; virtual;
     destructor Destroy; override;
     procedure Clear; virtual;
 

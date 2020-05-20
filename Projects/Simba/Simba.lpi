@@ -385,7 +385,7 @@
         <IsPartOfProject Value="True"/>
       </Unit51>
       <Unit52>
-        <Filename Value="parser/simba.ci_includebuffer.pas"/>
+        <Filename Value="parser/simba.ci_includecache.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit52>
     </Units>

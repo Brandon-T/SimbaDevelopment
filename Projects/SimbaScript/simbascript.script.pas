@@ -325,11 +325,10 @@ begin
             if InIgnore then
               Exit;
 
-            Path := FindPlugin(Argument, [ExtractFileDir(Sender.Tokenizer.FileName), FPluginPath]);
-            if Path = '' then
+            if not FindPlugin(Argument, [ExtractFileDir(Sender.Tokenizer.FileName), FPluginPath, FAppPath]) then
               raise Exception.Create('Plugin "' + Argument + '" not found');
 
-            Plugin := TMPlugin.Create(Path);
+            Plugin := TMPlugin.Create(Argument);
             for i := 0 to Plugin.Declarations.Count - 1 do
               Plugin.Declarations[i].Import(Sender);
 
@@ -338,9 +337,10 @@ begin
 
         'IFHASLIB':
           begin
-            Path := FindPlugin(Argument, [ExtractFileDir(Sender.Tokenizer.FileName), FPluginPath]);
-
-            FCompiler.pushConditional((not InIgnore) and (Path <> ''), Sender.DocPos);
+            if FindPlugin(Argument, [ExtractFileDir(Sender.Tokenizer.FileName), FPluginPath, FAppPath]) then
+              FCompiler.pushConditional((not InIgnore) and True, Sender.DocPos)
+            else
+              FCompiler.pushConditional((not InIgnore) and False, Sender.DocPos);
           end;
 
         'IFHASFILE':

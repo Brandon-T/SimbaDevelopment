@@ -188,7 +188,7 @@ var
 begin
   FDeclarations.Clear();
 
-  for Declaration in FParser.Globals.ExportToArrays().Items do
+  for Declaration in FParser.Globals[''] do
   begin
     if Declaration.ClassType = TciProcedureDeclaration then
     begin
@@ -200,7 +200,7 @@ begin
     FDeclarations.Add(Declaration);
   end;
 
-  FDeclarations.Extend(FParser.LocalsArray);
+  FDeclarations.Extend(FParser.Locals['']);
 end;
 
 procedure TSimbaAutoComplete.FillTypeDeclarations(Declaration: TDeclaration);
