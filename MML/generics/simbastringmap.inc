@@ -168,3 +168,10 @@ begin
   Result.Keys := FStringList.ExportToArray();
   Result.Items := FItems.ExportToArray;
 end;
+
+procedure TSimbaStringMap.Extend(Arr: TTArrays);
+begin
+  FStringList.Extend(Arr.Keys);
+  FItems.Extend(Arr.Items);
+  FCount := FItems.Count;
+end;

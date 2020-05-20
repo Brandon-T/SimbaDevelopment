@@ -417,6 +417,77 @@ begin
   SetLength(FDeclarations, 0);
   SetLength(FParameters, 0);
 
+
+  for i := 0 to High(Declarations) do
+  begin
+
+    {
+
+    if Declarations[i] is TciProcedureDeclaration then
+    begin
+      if Invoked then
+      begin
+        Declarations[i] := TciProcedureDeclaration(Declarations[i]).ReturnType;
+        if Declarations[i] = nil then
+          Continue;
+      end;
+    end;
+
+    if Declarations[i] is TciVarDeclaration then
+    begin
+      Declarations[i] := TciVarDeclaration(Declarations[i]).VarType;
+      if (Declarations[i] = nil) then
+        Continue;
+    end;
+
+    if Declarations[i] is TciTypeKind then
+    begin
+      if Declarations[i].Items.GetFirstItemOfClass(TciTypeIdentifer) <> nil then
+        Declarations[i] := Declarations[i].Items.GetFirstItemOfClass(TciTypeIdentifer)
+      else
+      if Declarations[i].Items.GetFirstItemOfClass(TciProceduralType) <> nil then
+        Declarations[i] := Declarations[i].Items.GetFirstItemOfClass(TciProceduralType);
+
+      if (Declarations[i] = nil) then
+        Continue;
+    end;
+
+    if Declarations[i] is TciTypeIdentifer then
+    begin
+      Declarations[i] := Parser.getGlobalType(Declarations[i].CleanText);
+      if Declarations[i] = nil then
+        Continue;
+    end;
+
+    if Declarations[i] is TciTypeDeclaration then
+    begin
+      // TFoo = native(TFoo);
+      with Declarations[i] as TciTypeDeclaration do
+      begin
+        if GetType() is TciNativeType then
+        begin
+          Declarations[i] := FParser.getGlobalType(GetParent());
+          if Declarations[i] = nil then
+            Continue;
+        end;
+      end;
+
+      // TFoo = procedure(abc: Int32);
+      with Declarations[i] as TciTypeDeclaration do
+         Declarations[i] := GetType();
+    end;
+     }
+    if Declarations[i] is TciProcedureDeclaration then
+    begin
+      SetLength(FDeclarations, Length(FDeclarations) + 1);
+      SetLength(FParameters, Length(FParameters) + 1);
+
+      FDeclarations[High(FDeclarations)] := Declarations[i] as TciProcedureDeclaration;
+      FParameters[High(FParameters)] := FDeclarations[High(FDeclarations)].GetParamDeclarations();
+    end;
+  end;
+
+  {
   for i := 0 to High(Declarations) do
   begin
     if Declarations[i] is TciProcedureDeclaration then
@@ -481,7 +552,7 @@ begin
       FDeclarations[High(FDeclarations)] := Declarations[i] as TciProcedureDeclaration;
       FParameters[High(FParameters)] := FDeclarations[High(FDeclarations)].GetParamDeclarations();
     end;
-  end;
+  end;   }
 
   if Length(FDeclarations) > 0 then
   begin

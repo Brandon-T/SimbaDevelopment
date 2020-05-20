@@ -188,6 +188,8 @@ type
     procedure ImportFromArrays(Arr: TTArrays); virtual;
     function ExportToArrays: TTArrays; virtual;
 
+    procedure Extend(Arr: TTArrays);
+
     property Items[Index: String]: _T read getItem write setItem; default;
     property ItemsI[Index: Integer]: _T read getItemI write setItemI;
     property Key[Index: Integer]: String read getKey write setKeyI;

@@ -411,6 +411,7 @@ var
 begin
   for i := 0 to High(Includes) do
   begin
+    {
     if Includes[i].IsLibrary then
       Section := addPluginSection(ExtractFileNameOnly(Includes[i].FileName))
     else
@@ -420,7 +421,7 @@ begin
     end;
 
     addDeclarations(Includes[i].Items, Section, False, False, False);
-    addIncludes(Includes[i].Includes);
+    addIncludes(Includes[i].Includes);  }
   end;
 end;
 
@@ -447,13 +448,14 @@ begin
 
   addDeclarations(FReplacementParser.Items, FScriptNode, True, False, True);
 
+  {
   if (FParser = nil) or (FReplacementParser.IncludesHash <> FParser.IncludesHash) then
   begin
     FPluginsNode.DeleteChildren();
     FIncludesNode.DeleteChildren();
 
-    addIncludes(FReplacementParser.Includes);
-  end;
+    //addIncludes(FReplacementParser.Includes);
+  end;  }
 
   TThread.Synchronize(nil, @EndUpdate);
 end;
