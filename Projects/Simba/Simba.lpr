@@ -26,6 +26,7 @@ program Simba;
 {$mode objfpc}{$H+}
 
 {$I Simba.inc}
+<<<<<<< ours
 
 uses
   {$IFDEF UNIX}{$IFDEF UseCThreads}cthreads, cmem,{$ENDIF}{$ENDIF}
@@ -52,5 +53,53 @@ begin
 //  Application.CreateForm(TSettingsSimpleForm, SettingsSimpleForm); Done in FormCreate of MainForm
 //  Application.CreateForm(TSettingsForm, SettingsForm); Done in FormCreate of MainForm
   Application.Run;
+=======
+{$R Simba.res}
+{$R ../SimbaResources/SimbaResources.res}
+
+uses
+  {$IFDEF UNIX}
+  cthreads, cmem, simba.linux_initialization,
+  {$ENDIF}
+  classes, interfaces, forms,
+  simba.settings, simba.main, simba.aboutform, simba.debugimage, simba.bitmapconv,
+  simba.updateform, simba.splashform, simba.functionlistform, simba.scripttabsform,
+  simba.debugform, simba.filebrowserform, simba.notesform, simba.settingsform,
+  simba.package_form, simba.colorpicker_historyform
+  {$IFDEF USE_FORMDESIGNER},
+  simba.formdesigner
+  {$ENDIF};
+
+begin
+  {$IF DECLARED(SetHeapTraceOutput)}
+  if FileExists('memoryleaks.trc') then
+    DeleteFile('memoryleaks.trc');
+
+  SetHeapTraceOutput('memoryleaks.trc');
+  {$ENDIF}
+
+  Application.ShowMainForm := False;
+  Application.Initialize();
+  Application.CreateForm(TSimbaSplashForm, SimbaSplashForm);
+  Application.CreateForm(TSimbaForm, SimbaForm);
+  Application.CreateForm(TSimbaFunctionListForm, SimbaFunctionListForm);
+  Application.CreateForm(TSimbaDebugImageForm, SimbaDebugImageForm);
+  Application.CreateForm(TSimbaNotesForm, SimbaNotesForm);
+  Application.CreateForm(TSimbaScriptTabsForm, SimbaScriptTabsForm);
+  Application.CreateForm(TSimbaDebugForm, SimbaDebugForm);
+  Application.CreateForm(TSimbaFileBrowserForm, SimbaFileBrowserForm);
+  Application.CreateForm(TAboutForm, AboutForm);
+  Application.CreateForm(TBitmapConvForm, BitmapConvForm);
+  Application.CreateForm(TSimbaUpdateForm, SimbaUpdateForm);
+  Application.CreateForm(TSimbaSettingsForm, SimbaSettingsForm);
+  Application.CreateForm(TSimbaPackageForm, SimbaPackageForm);
+  Application.CreateForm(TSimbaColorHistoryForm, SimbaColorHistoryForm);
+  {$IFDEF USE_FORMDESIGNER}
+  Application.CreateForm(TCompForm, CompForm);
+  {$ENDIF}
+
+  Application.QueueASyncCall(@SimbaForm.Init, 0);
+  Application.Run();
+>>>>>>> theirs
 end.
 

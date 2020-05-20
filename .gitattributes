@@ -2,6 +2,10 @@
 
 *.bmp binary
 *.png binary
+<<<<<<< ours
+=======
+*.lrs binary
+>>>>>>> theirs
 
 *.simba linguist-language=Pascal
 *.sex linguist-language=Pascal

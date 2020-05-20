@@ -24,6 +24,7 @@
 {$DEFINE SIMBA}
 
 {$IFDEF LINUX}
+<<<<<<< ours
     {$DEFINE LINUX_HOTKEYS} // For global hotkeys, requires libkeybinder.
                             // See Units/Linux/keybinder.pas
 {$ENDIF}
@@ -60,3 +61,11 @@
          {$UNDEF USE_DEBUGGER}
          {$UNDEF USE_EXTENSIONS}
 {$ENDIF}
+=======
+  {$DEFINE LINUX_HOTKEYS} // For global hotkeys, requires libkeybinder.
+                          // See Units/Linux/keybinder.pas
+{$ENDIF}
+
+{$DEFINE USE_FORMDESIGNER}
+
+>>>>>>> theirs

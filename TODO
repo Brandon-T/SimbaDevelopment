@@ -1,3 +1,4 @@
+<<<<<<< ours
 Simple stuff, not required, may not be possible/useful:
     -   Make an TAction for the Colour Picker.                      [ ]
     -   Portable install (needs fiddling with settings and such)    [ ]
@@ -89,3 +90,12 @@ DONE:
         to save comparisons                                         [X]
     -   Add CTS 3                                                   [/]
     -   Add a direct RGB -> CIE L*a*b conversion                    [/]
+=======
+Lape Extensions [✖]
+Have finder functions not use a global TPA buffer (thread safety), gradual overallocation of result instead [✖]
+Basic threading in scripts [✖]
+Cleanup class imports [✖]
+Cleanup/fix crypto imports [✖]
+Integer math for CTS2? https://pastebin.com/9dybzgVH & https://pastebin.com/wkuCEShF [✖]
+Support Windows 10 high dpi scaling [✖]
+>>>>>>> theirs
