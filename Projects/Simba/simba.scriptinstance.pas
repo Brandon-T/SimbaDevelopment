@@ -23,6 +23,10 @@ type
     FOutputServer: TSimbaIPC_Server;
     FMethodServer: TSimbaIPC_Server;
 
+    FStateThread: TThread;
+    FOutputThread: TThread;
+    FMethodThread: TThread;
+
     FManageOutput: Boolean;
     FOutput: TStringList;
 
@@ -81,6 +85,9 @@ type
 implementation
 
 uses
+  {$IFDEF LINUX}
+  baseunix,
+  {$ENDIF}
   forms,
   simba.script_simbamethod, simba.debugform, simba.settings;
 
@@ -363,13 +370,13 @@ begin
     raise Exception.Create('SimbaScript exectuable not found: ' + FProcess.Executable);
 
   {$IFDEF LINUX}
-  if fpchmod(FProcess.Executable, &755) = 0 then //rwxr-xr-x
-    raise Exception.Create('Unable to make SimbaScript file exectuable');
+  if fpchmod(FProcess.Executable, &755) <> 0 then //rwxr-xr-x
+    raise Exception.Create('Unable to make SimbaScript exectuable');
   {$ENDIF}
 
-  TThread.ExecuteInThread(@RunMethodServer);
-  TThread.ExecuteInThread(@RunStateServer);
-  TThread.ExecuteInThread(@RunOutputServer);
+  FMethodThread := TThread.ExecuteInThread(@RunMethodServer);
+  FStateThread := TThread.ExecuteInThread(@RunStateServer);
+  FOutputThread := TThread.ExecuteInThread(@RunOutputServer);
 end;
 
 procedure TSimbaScriptInstance.Kill;
@@ -382,20 +389,37 @@ destructor TSimbaScriptInstance.Destroy;
 begin
   if (FProcess <> nil) then
   begin
-    FProcess.Terminate(0);
+    if FProcess.Running then
+      FProcess.Terminate(0);
+
     FProcess.Free();
   end;
 
-  FMethodServer.Terminate();
-  FStateServer.Terminate();
-  FOutputServer.Terminate();
-
-  // Wait for servers to terminate
-  while (FMethodServer <> nil) or (FOutputServer <> nil) or (FStateServer <> nil) do
+  if FMethodThread <> nil then
   begin
-    Application.ProcessMessages();
+    WriteLn('Terminate method server');
 
-    Sleep(25);
+    FMethodServer.Terminate();
+    while FMethodServer <> nil do
+      Sleep(10);
+  end;
+
+  if FStateThread <> nil then
+  begin
+    WriteLn('Terminate state server');
+
+    FStateServer.Terminate();
+    while FStateServer <> nil do
+      Sleep(10);
+  end;
+
+  if FOutputThread <> nil then
+  begin
+    WriteLn('Terminate output server');
+
+    FOutputServer.Terminate();
+    while FOutputServer <> nil do
+      Sleep(10);
   end;
 
   if (FOutput <> nil) then
