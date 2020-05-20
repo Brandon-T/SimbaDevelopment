@@ -26,34 +26,6 @@ program Simba;
 {$mode objfpc}{$H+}
 
 {$I Simba.inc}
-<<<<<<< ours
-
-uses
-  {$IFDEF UNIX}{$IFDEF UseCThreads}cthreads, cmem,{$ENDIF}{$ENDIF}
-  Interfaces, Forms, SimbaUnit, colourhistory, About, debugimage, bitmapconv,
-  selectonruntime, cselectonruntime,
-  {$IFDEF USE_FORMDESIGNER}design_frm, frmdesigner,{$ENDIF}
-  sclist, dcpbase64,sm_main, LPDump;
-
-{$R Simba.res}
-
-begin
-  Application.Initialize;
-
-  Application.CreateForm(TSimbaForm, SimbaForm);
-  Application.CreateForm(TColourHistoryForm, ColourHistoryForm);
-  Application.CreateForm(TAboutForm, AboutForm);
-  Application.CreateForm(TDebugImgForm, DebugImgForm);
-//  Application.CreateForm(TExtensionsForm, ExtensionsForm);
-  Application.CreateForm(TBitmapConvForm, BitmapConvForm);
-  Application.CreateForm(TSmanager, SManager);
-  {$IFDEF USE_FORMDESIGNER}Application.CreateForm(TCompForm,CompForm);{$ENDIF}
-//  Application.CreateForm(TDebuggerForm, DebuggerForm);
-//  Application.CreateForm(TSimbaUpdateForm, SimbaUpdateForm);
-//  Application.CreateForm(TSettingsSimpleForm, SettingsSimpleForm); Done in FormCreate of MainForm
-//  Application.CreateForm(TSettingsForm, SettingsForm); Done in FormCreate of MainForm
-  Application.Run;
-=======
 {$R Simba.res}
 {$R ../SimbaResources/SimbaResources.res}
 
@@ -150,6 +122,5 @@ begin
 
   Application.QueueASyncCall(@SimbaForm.Initialize, 0);
   Application.Run();
->>>>>>> theirs
 end.
 
